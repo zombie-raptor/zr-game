@@ -4,6 +4,9 @@
 
 (require :sdl2)
 
+(defconstant +width+ 1280)
+(defconstant +height+ 720)
+
 (defun main-loop ()
   (defun keydown-actions (scancode)
     (cond
@@ -18,7 +21,7 @@
 
   (defun init ()
     (gl:enable :depth-test)
-    (gl:viewport 0 0 1280 720)
+    (gl:viewport 0 0 +width+ +height+)
     (gl:matrix-mode :projection)
     (gl:ortho -2 2 -2 2 -2 2)
     (gl:matrix-mode :modelview)
@@ -27,7 +30,7 @@
     (gl:clear :color-buffer :depth-buffer))
 
   (sdl2:with-init (:everything)
-    (sdl2:with-window (win :w 1280 :h 720 :flags '(:shown :opengl))
+    (sdl2:with-window (win :w +width+ :h +height+ :flags '(:shown :opengl))
       (sdl2:with-gl-context (gl-context win)
         (sdl2:gl-make-current win gl-context)
         (init)
