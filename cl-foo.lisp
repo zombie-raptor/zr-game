@@ -4,19 +4,14 @@
 
 (require :sdl2)
 
-(defun basic-test ()
-  "Working code to start with. Based on cl-sdl2's demos."
-
-  (defun keydown-actions (scancode sym mod-value)
-    (cond
-      ((sdl2:scancode= scancode :scancode-w) (format t "~a~%" "WALK"))
-      ((sdl2:scancode= scancode :scancode-s) (sdl2:show-cursor))
-      ((sdl2:scancode= scancode :scancode-h) (sdl2:hide-cursor)))
-
-    (format t "Key sym: ~a, code: ~a, mod: ~a~%"
-            sym
-            scancode
-            mod-value))
+(defun main-loop ()
+  (defun keydown-actions (scancode)
+    (format t "~a~%" (cond
+                       ((sdl2:scancode= scancode :scancode-w) "W")
+                       ((sdl2:scancode= scancode :scancode-s) "S")
+                       ((sdl2:scancode= scancode :scancode-a) "A")
+                       ((sdl2:scancode= scancode :scancode-d) "D")
+                       (t "foo"))))
 
   (defun keyup-actions (scancode)
     (when (sdl2:scancode= scancode :scancode-escape)
@@ -37,16 +32,11 @@
         (sdl2:with-event-loop (:method :poll)
           (:keydown
            (:keysym keysym)
-           (keydown-actions (sdl2:scancode-value keysym) (sdl2:sym-value keysym) (sdl2:mod-value keysym)))
+           (keydown-actions (sdl2:scancode-value keysym)))
 
           (:keyup
            (:keysym keysym)
            (keyup-actions (sdl2:scancode-value keysym)))
-
-          (:mousemotion
-           (:x x :y y :xrel xrel :yrel yrel :state state)
-           (format t "Mouse motion abs(rel): ~a (~a), ~a (~a)~%Mouse state: ~a~%"
-                   x xrel y yrel state))
 
           (:idle
            ()
