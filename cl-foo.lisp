@@ -4,8 +4,11 @@
 
 (require :sdl2)
 
-(defconstant +width+ 1280)
-(defconstant +height+ 720)
+(defparameter *width* 1280)
+(defparameter *height* 720)
+(defparameter *zoom* 100)
+(defparameter *x* (/ *width* *zoom*))
+(defparameter *y* (/ *height* *zoom*))
 
 (defun main-loop ()
   (defun keydown-actions (scancode)
@@ -21,16 +24,16 @@
 
   (defun init ()
     (gl:enable :depth-test)
-    (gl:viewport 0 0 +width+ +height+)
+    (gl:viewport 0 0 *width* *height*)
     (gl:matrix-mode :projection)
-    (gl:ortho -2 2 -2 2 -2 2)
+    (gl:ortho (- *x*) *x* (- *y*) *y* (- *x*) *x*)
     (gl:matrix-mode :modelview)
     (gl:load-identity)
     (gl:clear-color 19/255 19/255 39/255 1.0) ; #131327 background color
     (gl:clear :color-buffer :depth-buffer))
 
   (sdl2:with-init (:everything)
-    (sdl2:with-window (win :w +width+ :h +height+ :flags '(:shown :opengl))
+    (sdl2:with-window (win :w *width* :h *height* :flags '(:shown :opengl))
       (sdl2:with-gl-context (gl-context win)
         (sdl2:gl-make-current win gl-context)
         (init)
@@ -44,14 +47,16 @@
            (:keysym keysym)
            (keyup-actions (sdl2:scancode-value keysym)))
 
+          ;; Draws a square.
           (:idle
            ()
            (gl:clear :color-buffer :depth-buffer)
-           (gl:begin :triangles)
+           (gl:begin :quads)
            (gl:color 1.0 0.0 0.0)
-           (gl:vertex 0.0 1.0)
-           (gl:vertex -1.0 -1.0)
-           (gl:vertex 1.0 -1.0)
+           (gl:vertex -1.0 1.0 0.0)
+           (gl:vertex 1.0 1.0 0.0)
+           (gl:vertex 1.0 -1.0 0.0)
+           (gl:vertex -1.0 -1.0 0.0)
            (gl:end)
            (gl:flush)
            (sdl2:gl-swap-window win))
