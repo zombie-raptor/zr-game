@@ -6,9 +6,9 @@
 
 (defparameter *width* 1280)
 (defparameter *height* 720)
-(defparameter *zoom* 100)
-(defparameter *x* (/ *width* *zoom*))
-(defparameter *y* (/ *height* *zoom*))
+(defparameter *scale* 10)
+(defparameter *x* (* *width* (/ *scale* *height*)))
+(defparameter *y* *scale*)
 
 (defun main-loop ()
   (defun keydown-actions (scancode)
