@@ -5,7 +5,9 @@
   :description "This is just a sandbox for me to test out cl packages, SDL2, and OpenGL."
   :author "Michael Babich"
   :license "MIT"
-  :depends-on (:sdl2)
+  :depends-on (:sdl2
+               :alexandria
+               :cl-opengl
+               :cl-glu)
   :components ((:file "package")
                (:file "cl-foo")))
-
