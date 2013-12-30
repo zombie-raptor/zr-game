@@ -2,13 +2,9 @@
 
 (require :sdl2)
 
-(defparameter *width* 1280)
-(defparameter *height* 720)
-(defparameter *ratio* (/ *width* *height*))
-
-(defun main-loop ()
+(defun main-loop (&key (width 1280) (height 720))
   (sdl2:with-init (:everything)
-    (sdl2:with-window (win :w *width* :h *height* :flags '(:shown :opengl))
+    (sdl2:with-window (win :w width :h height :flags '(:shown :opengl))
       (sdl2:with-gl-context (gl-context win)
         (sdl2:gl-make-current win gl-context)
         (sdl2:hide-cursor)
@@ -16,7 +12,7 @@
         (gl:matrix-mode :projection)
         (gl:load-identity)
         (gl:ortho 0 2 0 2 -2 10)
-        ;; (glu:perspective 45.0 *ratio* 0.1 10)
+        ;; (glu:perspective 45.0 (/ width height) 0.1 10)
         (gl:matrix-mode :modelview)
         (gl:load-identity)
         (gl:clear-color 19/255 19/255 39/255 1.0) ; #131327 background color
