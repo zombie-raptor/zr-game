@@ -1,5 +1,5 @@
 ;;;; package.lisp
 
 (defpackage #:cl-foo
-  (:use #:cl))
-
+  (:use #:cl #:sdl2)
+  (:export #:main-loop))
