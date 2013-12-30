@@ -3,8 +3,6 @@
 ;(in-package #:cl-foo)
 
 (require :sdl2)
-(require :cl-opengl)
-(require :cl-glu)
 
 (defparameter *width* 1280)
 (defparameter *height* 720)
@@ -26,7 +24,6 @@
     (gl:enable :cull-face :lighting :light0 :depth-test)
     (gl:matrix-mode :projection)
     (gl:load-identity)
-;    (gl:frustum -2 2 -2 2 1 10)
     (gl:ortho 0 2 0 2 -2 10)
 ;    (glu:perspective 45.0 *ratio* 0.1 10)
     (gl:matrix-mode :modelview)
@@ -40,6 +37,17 @@
         (sdl2:gl-make-current win gl-context)
         (sdl2:hide-cursor)
         (init)
+        (gl:clear :color-buffer :depth-buffer)
+        ;; todo: polygon instead?
+        (gl:begin :quad-strip)
+        (gl:material :front :ambient-and-diffuse #(1.0 0.0 0.0 1.0))
+        (gl:vertex 0.0 1.0 2.0)
+        (gl:vertex 1.0 1.0 2.0)
+        (gl:vertex 1.0 0.0 2.0)
+        (gl:vertex 0.0 0.0 2.0)
+        (gl:end)
+        (gl:flush)
+        (sdl2:gl-swap-window win)
 
         (sdl2:with-event-loop (:method :poll)
           (:keydown
@@ -50,18 +58,7 @@
            (:keysym keysym)
            (keyup-actions (sdl2:scancode-value keysym)))
 
-          ;; Used to draw a square.
           (:idle
-           ()
-           (gl:clear :color-buffer :depth-buffer)
-           (gl:begin :quad-strip)
-           (gl:material :front :ambient-and-diffuse #(1.0 0.0 0.0 1.0))
-           (gl:vertex 0.0 1.0 2.0)
-           (gl:vertex 1.0 1.0 2.0)
-           (gl:vertex 1.0 0.0 2.0)
-           (gl:vertex 0.0 0.0 2.0)
-           (gl:end)
-           (gl:flush)
-           (sdl2:gl-swap-window win))
+           ())
 
           (:quit () t))))))
