@@ -15,20 +15,20 @@
       (sdl2:with-gl-context (gl-context win)
         (sdl2:gl-make-current win gl-context)
 
-        (let ((vs (gl:create-shader :vertex-shader))
-              (fs (gl:create-shader :fragment-shader))
+        (let ((vert (gl:create-shader :vertex-shader))
+              (frag (gl:create-shader :fragment-shader))
               (program (gl:create-program)))
 
           (sdl2:hide-cursor)
           (gl:enable :depth-test)
-          (gl:shader-source vs (read-shader "test.vert"))
-          (gl:shader-source fs (read-shader "test.frag"))
-          (gl:compile-shader vs)
-          (gl:compile-shader fs)
-          (format t (gl:get-shader-info-log vs))
-          (format t (gl:get-shader-info-log fs))
-          (gl:attach-shader program vs)
-          (gl:attach-shader program fs)
+          (gl:shader-source vert (read-shader "test.vert"))
+          (gl:shader-source frag (read-shader "test.frag"))
+          (gl:compile-shader vert)
+          (gl:compile-shader frag)
+          (format t (gl:get-shader-info-log vert))
+          (format t (gl:get-shader-info-log frag))
+          (gl:attach-shader program vert)
+          (gl:attach-shader program frag)
           (gl:link-program program)
           (glu:perspective 45.0 (/ width height) 0.1 100)
           (gl:clear-color 19/255 19/255 39/255 1.0) ; #131327 background color
@@ -63,4 +63,9 @@
             (:idle
              ())
 
-            (:quit () t)))))))
+            (:quit
+             ()
+             (gl:delete-shader vert)
+             (gl:delete-shader frag)
+             (gl:delete-program program)
+             t)))))))
