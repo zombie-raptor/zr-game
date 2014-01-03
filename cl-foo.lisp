@@ -3,16 +3,17 @@
 (in-package #:cl-foo)
 
 ;;; Return a shader from the given file.
-;;; fixme: add code for handling errors
 (defun read-shader (shader-type filename)
   (let ((shader (gl:create-shader shader-type))
         (pathname (merge-pathnames (asdf:system-source-directory :cl-foo) filename)))
     (gl:shader-source shader (alexandria:read-file-into-string pathname))
     (gl:compile-shader shader)
+    (let ((log (gl:get-shader-info-log shader)))
+      (if (not (string= "" log))
+          (error (concatenate 'string "Error in " filename "~%" log))))
     shader))
 
 ;;; Run a shader program with the given shaders.
-;;; fixme: add code for handling errors
 (defun shader-program (shaders)
   (let ((program (gl:create-program)))
     (mapcar #'(lambda (shader) (gl:attach-shader program shader)) shaders)
@@ -20,6 +21,9 @@
     (mapcar #'(lambda (shader) (gl:detach-shader program shader)) shaders)
     (mapcar #'gl:delete-shader shaders)
     (gl:use-program program)
+    (let ((log (gl:get-program-info-log program)))
+      (if (not (string= "" log))
+          (error (concatenate 'string "Error in OpenGL shader program " "~%" log))))
     (gl:delete-program program)))
 
 (defun main-loop (&key (width 1280) (height 720) (title "cl-foo"))
@@ -63,7 +67,6 @@
              (when (sdl2:scancode= scancode :scancode-escape)
                (sdl2:push-event :quit))))
 
-          ;; fixme: does something need to be done here instead of above?
           (:idle ())
 
           (:quit () t))))))
