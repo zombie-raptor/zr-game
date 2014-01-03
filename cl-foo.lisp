@@ -8,9 +8,8 @@
         (pathname (merge-pathnames (asdf:system-source-directory :cl-foo) filename)))
     (gl:shader-source shader (alexandria:read-file-into-string pathname))
     (gl:compile-shader shader)
-    (let ((log (gl:get-shader-info-log shader)))
-      (if (not (string= "" log))
-          (error (concatenate 'string "Error in " filename "~%" log))))
+    (if (not (gl:get-shader shader :compile-status))
+        (error (concatenate 'string "Error in " filename "~%" (gl:get-shader-info-log shader))))
     shader))
 
 ;;; Run a shader program with the given shaders.
@@ -21,22 +20,18 @@
     (mapcar #'(lambda (shader) (gl:detach-shader program shader)) shaders)
     (mapcar #'gl:delete-shader shaders)
     (gl:use-program program)
-    (let ((log (gl:get-program-info-log program)))
-      (if (not (string= "" log))
-          (error (concatenate 'string "Error in OpenGL shader program " "~%" log))))
     (gl:delete-program program)))
 
 (defun main-loop (&key (width 1280) (height 720) (title "cl-foo"))
   (sdl2:with-init (:everything)
     (sdl2:with-window (win :title title :w width :h height :flags '(:shown :opengl))
       (sdl2:with-gl-context (gl-context win)
-        ;; fixme: make sure the order is correct and everything is necessary
         (sdl2:gl-make-current win gl-context)
         (sdl2:hide-cursor)
         (gl:enable :depth-test)
         (glu:perspective 45.0 (/ width height) 0.1 100)
         (gl:clear-color 19/255 19/255 39/255 1.0)
-        (gl:clear :color-buffer :depth-buffer)
+        (gl:clear :color-buffer)
         (shader-program (list (read-shader :vertex-shader "test.vert")
                               (read-shader :fragment-shader "test.frag")))
 
