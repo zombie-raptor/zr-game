@@ -7,7 +7,6 @@
   :license "MIT"
   :depends-on (:sdl2
                :alexandria
-               :cl-opengl
                :cl-glu)
   :components ((:file "package")
                (:file "cl-foo")))

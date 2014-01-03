@@ -1,7 +1,6 @@
 (in-package #:cl-foo)
 
 (require :sdl2)
-(require :cl-opengl)
 (require :cl-glu)
 (require :alexandria)
 
