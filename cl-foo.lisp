@@ -7,18 +7,16 @@
 
 (defun get-shader (shader-type filename)
   (let ((shader (gl:create-shader shader-type))
-        (current-directory (asdf:system-source-directory :cl-foo)))
-    (gl:shader-source shader
-                      (alexandria:read-file-into-string (merge-pathnames current-directory
-                                                                         filename)))
+        (pathname (merge-pathnames (asdf:system-source-directory :cl-foo) filename)))
+    (gl:shader-source shader (alexandria:read-file-into-string pathname))
     (gl:compile-shader shader)
     shader))
 
 (defun shader-program (shaders)
   (let ((program (gl:create-program)))
-    (mapcar (lambda (shader) (gl:attach-shader program shader)) shaders)
+    (mapcar #'(lambda (shader) (gl:attach-shader program shader)) shaders)
     (gl:link-program program)
-    (mapcar (lambda (shader) (gl:detach-shader program shader)) shaders)
+    (mapcar #'(lambda (shader) (gl:detach-shader program shader)) shaders)
     (mapcar #'gl:delete-shader shaders)
     (gl:use-program program)
     (gl:delete-program program)))
@@ -33,7 +31,6 @@
         (glu:perspective 45.0 (/ width height) 0.1 100)
         (gl:clear-color 19/255 19/255 39/255 1.0) ; #131327 background color
         (gl:clear :color-buffer :depth-buffer)
-
         (shader-program (list (get-shader :vertex-shader "test.vert")
                               (get-shader :fragment-shader "test.frag")))
 
