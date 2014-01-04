@@ -35,12 +35,20 @@
         (shader-program (list (read-shader :vertex-shader "test.vert")
                               (read-shader :fragment-shader "test.frag")))
 
-        ;; fixme: replace with array buffer for coordinates in modern OpenGL
-        (gl:with-primitives :quads
-          (gl:vertex -1.0 -1.0 -4.0)
-          (gl:vertex 1.0 -1.0 -4.0)
-          (gl:vertex 1.0 1.0 -4.0)
-          (gl:vertex -1.0 1.0 -4.0))
+        ;; fixme: figure out this buffer stuff
+        (let* ((buffers (gl:gen-buffers 1))
+               (buffer (car buffers))
+               (gl-coords (gl:alloc-gl-array :float 12))
+               (coords #(-1.0 -1.0 -4.0
+                         1.0 -1.0 -4.0
+                         1.0 1.0 -4.0
+                         -1.0 1.0 -4.0)))
+          (gl:bind-buffer :array-buffer gl-coords)
+          (dotimes (i (length coords))
+            (setf (gl:glaref gl-coords i) (aref coords i)))
+          (gl:buffer-data :array-buffer :static-draw coords)
+          ;; fixme: finish this
+          )
 
         (gl:flush)
         (sdl2:gl-swap-window win)
