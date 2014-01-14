@@ -16,6 +16,7 @@
 (defun shader-program (shaders)
   (let ((program (gl:create-program)))
     (mapcar #'(lambda (shader) (gl:attach-shader program shader)) shaders)
+    (gl:bind-attrib-location program 0 "position")
     (gl:link-program program)
     (if (not (gl:get-program program :link-status))
         (error (concatenate 'string "Error in shader program~%" (gl:get-program-info-log program))))
@@ -38,20 +39,23 @@
         (sdl2:gl-make-current window gl-context)
         (sdl2:hide-cursor)
         (gl:enable :depth-test)
-        (gl:clear-color 19/255 19/255 39/255 1.0)
-        (gl:clear :color-buffer)
 
         (let* ((buffers (gl:gen-buffers 1))
                (buffer (car buffers))
                (coords (gl-array #(0.0 0.0 -1.0
                                    1.0 1.0 -1.0
                                    2.0 0.0 -1.0))))
-
-          ;; fixme: buffer stuff goes here.
-
+          (gl:bind-buffer :array-buffer buffer)
+          (gl:buffer-data :array-buffer :static-draw coords)
+          (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
+          (gl:enable-vertex-attrib-array 0)
+          (gl:bind-buffer :array-buffer buffer)
           (shader-program (list (read-shader :vertex-shader "test.vert")
                                 (read-shader :fragment-shader "test.frag"))))
 
+        (gl:clear-color 19/255 19/255 39/255 1.0)
+        (gl:clear :color-buffer)
+        (gl:draw-arrays :triangles 0 3)
         (gl:flush)
         (sdl2:gl-swap-window window)
 
