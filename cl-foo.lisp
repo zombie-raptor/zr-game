@@ -13,10 +13,10 @@
     shader))
 
 ;;; Run a shader program with the given shaders.
-(defun shader-program (shaders)
+(defun shader-program (shaders buffer-actions)
   (let ((program (gl:create-program)))
     (mapcar #'(lambda (shader) (gl:attach-shader program shader)) shaders)
-    (gl:bind-attrib-location program 0 "position")
+    (funcall buffer-actions program)
     (gl:link-program program)
     (if (not (gl:get-program program :link-status))
         (error (concatenate 'string "Error in shader program~%" (gl:get-program-info-log program))))
@@ -40,18 +40,17 @@
         (sdl2:hide-cursor)
         (gl:enable :depth-test)
 
-        (let* ((buffers (gl:gen-buffers 1))
-               (buffer (car buffers))
-               (coords (gl-array #(0.0 0.0 -1.0
-                                   1.0 1.0 -1.0
-                                   2.0 0.0 -1.0))))
-          (gl:bind-buffer :array-buffer buffer)
-          (gl:buffer-data :array-buffer :static-draw coords)
+        (let ((buffers (gl:gen-buffers 1)))
+          (gl:bind-buffer :array-buffer (nth 0 buffers))
+          (gl:buffer-data :array-buffer :static-draw (gl-array #(0.0 0.0 -1.0
+                                                                 0.5 1.0 -1.0
+                                                                 1.0 0.0 -1.0)))
           (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
           (gl:enable-vertex-attrib-array 0)
-          (gl:bind-buffer :array-buffer buffer)
+          (gl:bind-buffer :array-buffer (nth 0 buffers))
           (shader-program (list (read-shader :vertex-shader "test.vert")
-                                (read-shader :fragment-shader "test.frag"))))
+                                (read-shader :fragment-shader "test.frag"))
+                          (lambda (program) (gl:bind-attrib-location program 0 "position"))))
 
         (gl:clear-color 19/255 19/255 39/255 1.0)
         (gl:clear :color-buffer)
