@@ -17,41 +17,44 @@
   (let ((program (gl:create-program)))
     (mapcar #'(lambda (shader) (gl:attach-shader program shader)) shaders)
     (gl:link-program program)
+    (if (not (gl:get-program program :link-status))
+        (error (concatenate 'string "Error in shader program~%" (gl:get-program-info-log program))))
     (mapcar #'(lambda (shader) (gl:detach-shader program shader)) shaders)
     (mapcar #'gl:delete-shader shaders)
     (gl:use-program program)
-    (gl:delete-program program)))
+    (gl:delete-program program)
+    t))
+
+(defun gl-array (vect)
+  (let ((array (gl:alloc-gl-array :float (length vect))))
+    (dotimes (i (length vect))
+      (setf (gl:glaref array i) (aref vect i)))
+    array))
 
 (defun main-loop (&key (width 1280) (height 720) (title "cl-foo"))
   (sdl2:with-init (:everything)
-    (sdl2:with-window (win :title title :w width :h height :flags '(:shown :opengl))
-      (sdl2:with-gl-context (gl-context win)
-        (sdl2:gl-make-current win gl-context)
+    (sdl2:with-window (window :title title :w width :h height :flags '(:shown :opengl))
+      (sdl2:with-gl-context (gl-context window)
+        (sdl2:gl-make-current window gl-context)
         (sdl2:hide-cursor)
         (gl:enable :depth-test)
-        (glu:perspective 45.0 (/ width height) 0.1 100)
         (gl:clear-color 19/255 19/255 39/255 1.0)
         (gl:clear :color-buffer)
-        (shader-program (list (read-shader :vertex-shader "test.vert")
-                              (read-shader :fragment-shader "test.frag")))
 
-        ;; fixme: figure out this buffer stuff
         (let* ((buffers (gl:gen-buffers 1))
                (buffer (car buffers))
-               (gl-coords (gl:alloc-gl-array :float 12))
-               (coords #(-1.0 -1.0 -4.0
-                         1.0 -1.0 -4.0
-                         1.0 1.0 -4.0
-                         -1.0 1.0 -4.0)))
-          (gl:bind-buffer :array-buffer gl-coords)
-          (dotimes (i (length coords))
-            (setf (gl:glaref gl-coords i) (aref coords i)))
-          (gl:buffer-data :array-buffer :static-draw coords)
-          ;; fixme: finish this
-          )
+               (coords (gl-array #(0.0 0.0 4.0
+                                   1.0 0.0 4.0
+                                   1.0 1.0 4.0
+                                   0.0 1.0 4.0))))
+
+          ;; fixme: buffer stuff goes here.
+
+          (shader-program (list (read-shader :vertex-shader "test.vert")
+                                (read-shader :fragment-shader "test.frag"))))
 
         (gl:flush)
-        (sdl2:gl-swap-window win)
+        (sdl2:gl-swap-window window)
 
         (sdl2:with-event-loop (:method :poll)
           (:keydown
