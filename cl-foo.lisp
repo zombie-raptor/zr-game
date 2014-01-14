@@ -43,10 +43,9 @@
 
         (let* ((buffers (gl:gen-buffers 1))
                (buffer (car buffers))
-               (coords (gl-array #(0.0 0.0 4.0
-                                   1.0 0.0 4.0
-                                   1.0 1.0 4.0
-                                   0.0 1.0 4.0))))
+               (coords (gl-array #(0.0 0.0 -1.0
+                                   1.0 1.0 -1.0
+                                   2.0 0.0 -1.0))))
 
           ;; fixme: buffer stuff goes here.
 
