@@ -48,7 +48,7 @@
                         0.5 1.0 -1.0
                         0.0 0.0 -1.0
                         -0.5 1.0 -1.0
-                        -1.0 0.0 -1.0))))
+                        -1.0 0.0 -1.0)))
 
           (gl:bind-buffer :array-buffer (nth 0 buffers))
           (gl:buffer-data :array-buffer :static-draw (gl-array coords))
