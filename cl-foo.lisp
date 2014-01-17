@@ -38,29 +38,25 @@
         (sdl2:gl-make-current window gl-context)
         (sdl2:hide-cursor)
         (gl:enable :depth-test)
-
         (gl:clear-color 19/255 19/255 39/255 1.0)
         (gl:clear :color-buffer)
 
-        (let ((buffers (gl:gen-buffers 2))
+        (let ((buffers (gl:gen-buffers 1))
               (shaders (list (read-shader :vertex-shader "test.vert")
                              (read-shader :fragment-shader "test.frag")))
-              (coords (list #(0.0 0.0 -1.0
-                              0.5 1.0 -1.0
-                              1.0 0.0 -1.0)
-                            #(-0.0 0.0 -1.0
-                              -0.5 1.0 -1.0
-                              -1.0 0.0 -1.0))))
+              (coords #(1.0 0.0 -1.0
+                        0.5 1.0 -1.0
+                        0.0 0.0 -1.0
+                        -0.5 1.0 -1.0
+                        -1.0 0.0 -1.0))))
 
-          (dotimes (i 2)
-            (gl:bind-buffer :array-buffer (nth i buffers))
-            (gl:buffer-data :array-buffer :static-draw (gl-array (nth i coords)))
-            (gl:vertex-attrib-pointer i 3 :float nil 0 0)
-            (gl:enable-vertex-attrib-array i)
-            (shader-program shaders (lambda (program)
-                                      (gl:bind-attrib-location program i "position")))
-            (gl:draw-arrays :triangles 0 3))
-
+          (gl:bind-buffer :array-buffer (nth 0 buffers))
+          (gl:buffer-data :array-buffer :static-draw (gl-array coords))
+          (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
+          (gl:enable-vertex-attrib-array 0)
+          (shader-program shaders (lambda (program) (gl:bind-attrib-location program 0 "position")))
+          (gl:draw-arrays :triangles 0 3)
+          (gl:draw-arrays :triangles 2 3)
           (mapcar #'gl:delete-shader shaders))
 
         (gl:flush)
