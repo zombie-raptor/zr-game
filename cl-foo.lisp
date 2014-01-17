@@ -15,13 +15,12 @@
 ;;; Run a shader program with the given shaders.
 (defun shader-program (shaders buffer-actions)
   (let ((program (gl:create-program)))
-    (mapcar #'(lambda (shader) (gl:attach-shader program shader)) shaders)
     (funcall buffer-actions program)
+    (mapcar #'(lambda (shader) (gl:attach-shader program shader)) shaders)
     (gl:link-program program)
     (if (not (gl:get-program program :link-status))
         (error (concatenate 'string "Error in shader program~%" (gl:get-program-info-log program))))
     (mapcar #'(lambda (shader) (gl:detach-shader program shader)) shaders)
-    (mapcar #'gl:delete-shader shaders)
     (gl:use-program program)
     (gl:delete-program program)
     t))
@@ -40,21 +39,30 @@
         (sdl2:hide-cursor)
         (gl:enable :depth-test)
 
-        (let ((buffers (gl:gen-buffers 1)))
-          (gl:bind-buffer :array-buffer (nth 0 buffers))
-          (gl:buffer-data :array-buffer :static-draw (gl-array #(0.0 0.0 -1.0
-                                                                 0.5 1.0 -1.0
-                                                                 1.0 0.0 -1.0)))
-          (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
-          (gl:enable-vertex-attrib-array 0)
-          (gl:bind-buffer :array-buffer (nth 0 buffers))
-          (shader-program (list (read-shader :vertex-shader "test.vert")
-                                (read-shader :fragment-shader "test.frag"))
-                          (lambda (program) (gl:bind-attrib-location program 0 "position"))))
-
         (gl:clear-color 19/255 19/255 39/255 1.0)
         (gl:clear :color-buffer)
-        (gl:draw-arrays :triangles 0 3)
+
+        (let ((buffers (gl:gen-buffers 2))
+              (shaders (list (read-shader :vertex-shader "test.vert")
+                             (read-shader :fragment-shader "test.frag")))
+              (coords (list #(0.0 0.0 -1.0
+                              0.5 1.0 -1.0
+                              1.0 0.0 -1.0)
+                            #(-0.0 0.0 -1.0
+                              -0.5 1.0 -1.0
+                              -1.0 0.0 -1.0))))
+
+          (dotimes (i 2)
+            (gl:bind-buffer :array-buffer (nth i buffers))
+            (gl:buffer-data :array-buffer :static-draw (gl-array (nth i coords)))
+            (gl:vertex-attrib-pointer i 3 :float nil 0 0)
+            (gl:enable-vertex-attrib-array i)
+            (shader-program shaders (lambda (program)
+                                      (gl:bind-attrib-location program i "position")))
+            (gl:draw-arrays :triangles 0 3))
+
+          (mapcar #'gl:delete-shader shaders))
+
         (gl:flush)
         (sdl2:gl-swap-window window)
 
