@@ -13,9 +13,8 @@
     shader))
 
 ;;; Run a shader program with the given shaders.
-(defun shader-program (shaders buffer-actions)
+(defun shader-program (shaders)
   (let ((program (gl:create-program)))
-    (funcall buffer-actions program)
     (mapcar #'(lambda (shader) (gl:attach-shader program shader)) shaders)
     (gl:link-program program)
     (if (not (gl:get-program program :link-status))
@@ -25,11 +24,17 @@
     (gl:delete-program program)
     t))
 
-(defun gl-array (vect)
+(defun make-gl-array (vect)
   (let ((array (gl:alloc-gl-array :float (length vect))))
     (dotimes (i (length vect))
       (setf (gl:glaref array i) (aref vect i)))
     array))
+
+(defmacro with-gl-buffers ((buffers count) &body body)
+  `(let ((,buffers (gl:gen-buffers ,count)))
+     (unwind-protect
+          (progn ,@body)
+       (gl:delete-buffers buffers))))
 
 (defun main-loop (&key (width 1280) (height 720) (title "cl-foo"))
   (sdl2:with-init (:everything)
@@ -41,23 +46,24 @@
         (gl:clear-color 19/255 19/255 39/255 1.0)
         (gl:clear :color-buffer)
 
-        (let ((buffers (gl:gen-buffers 1))
-              (shaders (list (read-shader :vertex-shader "test.vert")
-                             (read-shader :fragment-shader "test.frag")))
-              (coords #(1.0 0.0 -1.0
-                        0.5 1.0 -1.0
-                        0.0 0.0 -1.0
-                        -0.5 1.0 -1.0
-                        -1.0 0.0 -1.0)))
+        (with-gl-buffers (buffers 1)
+          (let ((shaders (list (read-shader :vertex-shader "test.vert")
+                               (read-shader :fragment-shader "test.frag")))
+                (coords (make-gl-array #(0.0 1.0 -1.0
+                                         1.0 1.0 -1.0
+                                         1.0 0.0 -1.0
+                                         0.0 0.0 -1.0
+                                         0.0 1.0 -1.0))))
 
-          (gl:bind-buffer :array-buffer (nth 0 buffers))
-          (gl:buffer-data :array-buffer :static-draw (gl-array coords))
-          (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
-          (gl:enable-vertex-attrib-array 0)
-          (shader-program shaders (lambda (program) (gl:bind-attrib-location program 0 "position")))
-          (gl:draw-arrays :triangles 0 3)
-          (gl:draw-arrays :triangles 2 3)
-          (mapcar #'gl:delete-shader shaders))
+            (gl:bind-buffer :array-buffer (nth 0 buffers))
+            (gl:buffer-data :array-buffer :static-draw coords)
+            (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
+            (gl:enable-vertex-attrib-array 0)
+            (shader-program shaders)
+            (gl:draw-arrays :triangles 0 3)
+            (gl:draw-arrays :triangles 2 3)
+            (mapcar #'gl:delete-shader shaders)
+            (gl:free-gl-array coords)))
 
         (gl:flush)
         (sdl2:gl-swap-window window)
