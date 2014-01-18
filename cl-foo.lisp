@@ -2,8 +2,7 @@
 
 (in-package #:cl-foo)
 
-;;; Return a shader from the given file.
-(defun read-shader (shader-type filename)
+(defun read-shader (filename shader-type)
   (let ((shader (gl:create-shader shader-type))
         (pathname (merge-pathnames (asdf:system-source-directory :cl-foo) filename)))
     (gl:shader-source shader (alexandria:read-file-into-string pathname))
@@ -12,7 +11,6 @@
         (error (concatenate 'string "Error in " filename "~%" (gl:get-shader-info-log shader))))
     shader))
 
-;;; Run a shader program with the given shaders.
 (defun shader-program (shaders)
   (let ((program (gl:create-program)))
     (mapcar #'(lambda (shader) (gl:attach-shader program shader)) shaders)
@@ -20,9 +18,7 @@
     (if (not (gl:get-program program :link-status))
         (error (concatenate 'string "Error in shader program~%" (gl:get-program-info-log program))))
     (mapcar #'(lambda (shader) (gl:detach-shader program shader)) shaders)
-    (gl:use-program program)
-    (gl:delete-program program)
-    t))
+    program))
 
 (defun make-gl-array (vect)
   (let ((array (gl:alloc-gl-array :float (length vect))))
@@ -47,23 +43,28 @@
         (gl:clear :color-buffer)
 
         (with-gl-buffers (buffers 1)
-          (let ((shaders (list (read-shader :vertex-shader "test.vert")
-                               (read-shader :fragment-shader "test.frag")))
-                (coords (make-gl-array #(0.0 1.0 -1.0
-                                         1.0 1.0 -1.0
-                                         1.0 0.0 -1.0
-                                         0.0 0.0 -1.0
-                                         0.0 1.0 -1.0))))
-
-            (gl:bind-buffer :array-buffer (nth 0 buffers))
-            (gl:buffer-data :array-buffer :static-draw coords)
-            (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
-            (gl:enable-vertex-attrib-array 0)
-            (shader-program shaders)
-            (gl:draw-arrays :triangles 0 3)
-            (gl:draw-arrays :triangles 2 3)
-            (mapcar #'gl:delete-shader shaders)
-            (gl:free-gl-array coords)))
+          (let* ((shaders (list (read-shader "test.vert" :vertex-shader)
+                               (read-shader "test.frag" :fragment-shader)))
+                 (program (shader-program shaders))
+                 (coords (make-gl-array #(0.0 1.0 -1.0
+                                          1.0 1.0 -1.0
+                                          1.0 0.0 -1.0
+                                          0.0 0.0 -1.0
+                                          0.0 1.0 -1.0))))
+            (unwind-protect
+                 (progn
+                   (gl:use-program program)
+                   (gl:bind-buffer :array-buffer (nth 0 buffers))
+                   (gl:buffer-data :array-buffer :static-draw coords)
+                   (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
+                   (gl:enable-vertex-attrib-array 0)
+                   (gl:draw-arrays :triangles 0 3)
+                   (gl:draw-arrays :triangles 2 3)
+                   (gl:disable-vertex-attrib-array 0))
+              (progn
+                (mapcar #'gl:delete-shader shaders)
+                (gl:delete-program program)
+                (gl:free-gl-array coords)))))
 
         (gl:flush)
         (sdl2:gl-swap-window window)
