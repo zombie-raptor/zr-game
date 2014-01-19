@@ -32,29 +32,28 @@
   `(let ((,buffers (gl:gen-buffers ,count)))
      (unwind-protect
           (progn ,@body)
-       (gl:delete-buffers buffers))))
+       (gl:delete-buffers ,buffers))))
 
 (defmacro with-shaders ((shaders program &key shader-list) &body body)
   `(let* ((,shaders (mapcar #'read-shader ,shader-list))
-            (,program (shader-program ,shaders)))
+          (,program (shader-program ,shaders)))
      (unwind-protect
           (progn ,@body)
        (progn
-         (mapcar #'gl:delete-shader shaders)
-         (gl:delete-program program)))))
+         (mapcar #'gl:delete-shader ,shaders)
+         (gl:delete-program ,program)))))
 
 (defun main-loop (&key (width 1280) (height 720) (title "cl-foo"))
   (sdl2:with-init (:everything)
     (sdl2:with-window (window :title title :w width :h height :flags '(:shown :opengl))
       (sdl2:with-gl-context (gl-context window)
-        (sdl2:gl-make-current window gl-context)
-        (sdl2:hide-cursor)
-        (gl:enable :depth-test)
-        (gl:clear-color 19/255 19/255 39/255 1.0)
-        (gl:clear :color-buffer)
-
         (with-buffers (buffers :count 1)
           (with-shaders (shaders program :shader-list '("test.vert" "test.frag"))
+            (sdl2:gl-make-current window gl-context)
+            (sdl2:hide-cursor)
+            (gl:enable :depth-test)
+            (gl:clear-color 19/255 19/255 39/255 1.0)
+            (gl:clear :color-buffer)
             (let ((coords (make-gl-array #(0.0 1.0 -1.0
                                            1.0 1.0 -1.0
                                            1.0 0.0 -1.0
