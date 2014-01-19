@@ -68,28 +68,27 @@
               (gl:draw-arrays :triangles 0 3)
               (gl:draw-arrays :triangles 2 3)
               (gl:disable-vertex-attrib-array 0)
-              (gl:free-gl-array coords))))
+              (gl:free-gl-array coords))
+            (gl:flush)
+            (sdl2:gl-swap-window window)
 
-        (gl:flush)
-        (sdl2:gl-swap-window window)
+            (sdl2:with-event-loop (:method :poll)
+              (:keydown
+               (:keysym keysym)
+               ;; fixme: make the keys do something again
+               (let ((scancode (sdl2:scancode-value keysym)))
+                 (cond
+                   ((sdl2:scancode= scancode :scancode-w) "W")
+                   ((sdl2:scancode= scancode :scancode-s) "S")
+                   ((sdl2:scancode= scancode :scancode-a) "A")
+                   ((sdl2:scancode= scancode :scancode-d) "D"))))
 
-        (sdl2:with-event-loop (:method :poll)
-          (:keydown
-           (:keysym keysym)
-           ;; fixme: make the keys do something again
-           (let ((scancode (sdl2:scancode-value keysym)))
-             (cond
-               ((sdl2:scancode= scancode :scancode-w) "W")
-               ((sdl2:scancode= scancode :scancode-s) "S")
-               ((sdl2:scancode= scancode :scancode-a) "A")
-               ((sdl2:scancode= scancode :scancode-d) "D"))))
+              (:keyup
+               (:keysym keysym)
+               (let ((scancode (sdl2:scancode-value keysym)))
+                 (when (sdl2:scancode= scancode :scancode-escape)
+                   (sdl2:push-event :quit))))
 
-          (:keyup
-           (:keysym keysym)
-           (let ((scancode (sdl2:scancode-value keysym)))
-             (when (sdl2:scancode= scancode :scancode-escape)
-               (sdl2:push-event :quit))))
+              (:idle ())
 
-          (:idle ())
-
-          (:quit () t))))))
+              (:quit () t))))))))
