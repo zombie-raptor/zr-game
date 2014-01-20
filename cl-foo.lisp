@@ -21,18 +21,6 @@
     (mapcar #'(lambda (shader) (gl:detach-shader program shader)) shaders)
     program))
 
-(defun make-gl-array (type vect)
-  (let ((array (gl:alloc-gl-array type (length vect))))
-    (dotimes (i (length vect))
-      (setf (gl:glaref array i) (aref vect i)))
-    array))
-
-(defmacro with-buffers ((buffers &key (count 1)) &body body)
-  `(let ((,buffers (gl:gen-buffers ,count)))
-     (unwind-protect
-          (progn ,@body)
-       (gl:delete-buffers ,buffers))))
-
 (defmacro with-shaders ((shaders program &key shader-list dir) &body body)
   `(let* ((,shaders (mapcar #'(lambda (x) (read-shader x ,dir)) ,shader-list))
           (,program (shader-program ,shaders)))
@@ -41,6 +29,18 @@
        (progn
          (mapcar #'gl:delete-shader ,shaders)
          (gl:delete-program ,program)))))
+
+(defmacro with-buffers ((buffers &key (count 1)) &body body)
+  `(let ((,buffers (gl:gen-buffers ,count)))
+     (unwind-protect
+          (progn ,@body)
+       (gl:delete-buffers ,buffers))))
+
+(defun make-gl-array (type vect)
+  (let ((array (gl:alloc-gl-array type (length vect))))
+    (dotimes (i (length vect))
+      (setf (gl:glaref array i) (aref vect i)))
+    array))
 
 (defun main-loop (&key (width 1280) (height 720) (title "cl-foo"))
   (sdl2:with-init (:everything)
