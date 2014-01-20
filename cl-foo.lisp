@@ -2,12 +2,11 @@
 
 (in-package #:cl-foo)
 
-(defun read-shader (filename)
+(defun read-shader (filename directory)
   (let ((shader (gl:create-shader (if (string= ".vert" (subseq filename (- (length filename) 5)))
                                       :vertex-shader
-                                      :fragment-shader)))
-        (pathname (merge-pathnames (asdf:system-source-directory :cl-foo) filename)))
-    (gl:shader-source shader (alexandria:read-file-into-string pathname))
+                                      :fragment-shader))))
+    (gl:shader-source shader (alexandria:read-file-into-string (merge-pathnames directory filename)))
     (gl:compile-shader shader)
     (if (not (gl:get-shader shader :compile-status))
         (error (concatenate 'string "Error in " filename "~%" (gl:get-shader-info-log shader))))
@@ -22,8 +21,8 @@
     (mapcar #'(lambda (shader) (gl:detach-shader program shader)) shaders)
     program))
 
-(defun make-gl-array (vect)
-  (let ((array (gl:alloc-gl-array :float (length vect))))
+(defun make-gl-array (type vect)
+  (let ((array (gl:alloc-gl-array type (length vect))))
     (dotimes (i (length vect))
       (setf (gl:glaref array i) (aref vect i)))
     array))
@@ -34,8 +33,8 @@
           (progn ,@body)
        (gl:delete-buffers ,buffers))))
 
-(defmacro with-shaders ((shaders program &key shader-list) &body body)
-  `(let* ((,shaders (mapcar #'read-shader ,shader-list))
+(defmacro with-shaders ((shaders program &key shader-list dir) &body body)
+  `(let* ((,shaders (mapcar #'(lambda (x) (read-shader x ,dir)) ,shader-list))
           (,program (shader-program ,shaders)))
      (unwind-protect
           (progn ,@body)
@@ -48,18 +47,17 @@
     (sdl2:with-window (window :title title :w width :h height :flags '(:shown :opengl))
       (sdl2:with-gl-context (gl-context window)
         (with-buffers (buffers :count 1)
-          (with-shaders (shaders program :shader-list '("test.vert" "test.frag"))
+          (with-shaders (shaders program :shader-list '("test.vert" "test.frag") :dir (asdf:system-source-directory :cl-foo))
             (sdl2:gl-make-current window gl-context)
             (sdl2:hide-cursor)
             (gl:enable :depth-test)
             (gl:clear-color 19/255 19/255 39/255 1.0)
             (gl:clear :color-buffer)
-            (let ((coords (make-gl-array #(0.0 1.0 -1.0
-                                           1.0 1.0 -1.0
-                                           1.0 0.0 -1.0
-                                           0.0 0.0 -1.0
-                                           0.0 1.0 -1.0))))
-
+            (let ((coords (make-gl-array :float #(0.0 1.0 -1.0
+                                                  1.0 1.0 -1.0
+                                                  1.0 0.0 -1.0
+                                                  0.0 0.0 -1.0
+                                                  0.0 1.0 -1.0))))
               (gl:use-program program)
               (gl:bind-buffer :array-buffer (nth 0 buffers))
               (gl:buffer-data :array-buffer :static-draw coords)
