@@ -62,6 +62,7 @@
   (let ((c (magnitude v)))
     (map 'vector #'(lambda (x) (/ x c)) v)))
 
+;; Returns vector from two vectors.
 (defun cross-product (u v)
   (vector (- (* (elt u 1) (elt v 2)) (* (elt u 2) (elt v 1)))
           (- (* (elt u 2) (elt v 0)) (* (elt u 0) (elt v 2)))
@@ -73,11 +74,10 @@
   (let* ((f (normalize (map 'vector #'- center eye)))
          (s (cross-product f (normalize up)))
          (u (cross-product (normalize s) f)))
-    (concatenate 'vector
-                 s #(0)
-                 u #(0)
-                 (map 'vector #'- f) #(0)
-                 #(0 0 0 1))))
+    (vector (elt s 0) (elt s 1) (elt s 2) 0.0
+            (elt u 0) (elt u 1) (elt u 2) 0.0
+            (- (elt f 0)) (- (elt f 1)) (- (elt f 2)) 0.0
+            0.0 0.0 0.0 1.0)))
 
 (defun main-loop (&key (width 1280) (height 720) (title "cl-foo"))
   (sdl2:with-init (:everything)
@@ -99,7 +99,7 @@
               (gl:uniform-matrix (gl:get-uniform-location program "projection_matrix") 4
                                  (vector (perspective 45.0 (/ width height) 0.1 100.0)))
               (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
-                                 (vector (look-at #(0.0 0.0 20.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
+                                 (vector (look-at #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
               (gl:bind-buffer :array-buffer (nth 0 buffers))
               (gl:buffer-data :array-buffer :static-draw coords)
               (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
