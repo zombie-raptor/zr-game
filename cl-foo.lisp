@@ -62,11 +62,10 @@
   (let ((c (magnitude v)))
     (map 'vector #'(lambda (x) (/ x c)) v)))
 
-;; Using one of the definitions from Wikipedia. I hope this works.
 (defun cross-product (u v)
-  (vector (- (* (elt u 1) (elt v 2)) (elt u 2) (elt v 1))
-          (- (* (elt u 2) (elt v 0)) (elt u 0) (elt v 2))
-          (- (* (elt u 0) (elt v 1)) (elt u 1) (elt v 0))))
+  (vector (- (* (elt u 1) (elt v 2)) (* (elt u 2) (elt v 1)))
+          (- (* (elt u 2) (elt v 0)) (* (elt u 0) (elt v 2)))
+          (- (* (elt u 0) (elt v 1)) (* (elt u 1) (elt v 0)))))
 
 ;; Very naive reimplementation of the gluLookAt matrix.
 ;; https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
@@ -100,7 +99,7 @@
               (gl:uniform-matrix (gl:get-uniform-location program "projection_matrix") 4
                                  (vector (perspective 45.0 (/ width height) 0.1 100.0)))
               (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
-                                 (vector (look-at #(0.0 1.5 10.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
+                                 (vector (look-at #(0.0 0.0 20.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
               (gl:bind-buffer :array-buffer (nth 0 buffers))
               (gl:buffer-data :array-buffer :static-draw coords)
               (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
