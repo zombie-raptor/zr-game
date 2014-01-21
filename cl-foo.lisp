@@ -1,7 +1,9 @@
-;;;; Sets up a very simple SDL2 and OpenGL program using shader files.
+;;;; This file might do something some day.
 
 (in-package #:cl-foo)
 
+;; Currently assumes .vert or .frag are the only possible extensions
+;; for shader files, and reads them in as a string.
 (defun read-shader (filename directory)
   (let ((shader (gl:create-shader (if (string= ".vert" (subseq filename (- (length filename) 5)))
                                       :vertex-shader
@@ -42,6 +44,42 @@
       (setf (gl:glaref array i) (aref vect i)))
     array))
 
+;; Implementation of the gluPerspective matrix.
+;; https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
+(defun perspective (fovy aspect znear zfar)
+  (let ((f (tan (* fovy (/ pi 360.0)))))
+    (vector (/ aspect f) 0.0 0.0 0.0
+            0.0 (/ f) 0.0 0.0
+            0.0 0.0 (/ (+ zfar znear) (- znear zfar)) (/ (* 2.0 zfar znear) (- znear zfar))
+            0.0 0.0 -1.0 0.0)))
+
+;; Calculates the magnitude of a list representing a mathematical
+;; vector.
+(defun magnitude (l)
+  (sqrt (reduce '+ (mapcar #'(lambda (x) (expt x 2)) l))))
+
+;; Returns a unit vector of a list representing a mathematical vector.
+(defun normalize (l)
+  (mapcar #'(lambda (x) (/ x (magnitude l))) l))
+
+;; Using one of the definitions from Wikipedia. I hope this works.
+(defun cross-product (l1 l2)
+  (list (- (* (nth 1 l1) (nth 2 l2)) (nth 2 l1) (nth 1 l2))
+        (- (* (nth 2 l1) (nth 0 l2)) (nth 0 l1) (nth 2 l2))
+        (- (* (nth 0 l1) (nth 1 l2)) (nth 1 l1) (nth 0 l2))))
+
+;; Very naive reimplementation of the gluLookAt matrix.
+;; https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
+(defun look-at (eye center up)
+  (let* ((f (normalize (mapcar #'- center eye)))
+         (up-hat (normalize up))
+         (s (cross-product f up-hat))
+         (u (cross-product (normalize s) f)))
+    (vector (nth 0 s) (nth 1 s) (nth 2 s) 0
+            (nth 0 u) (nth 1 u) (nth 2 u) 0
+            (- (nth 0 f)) (- (nth 1 f)) (- (nth 2 f)) 0
+            0 0 0 1)))
+
 (defun main-loop (&key (width 1280) (height 720) (title "cl-foo"))
   (sdl2:with-init (:everything)
     (sdl2:with-window (window :title title :w width :h height :flags '(:shown :opengl))
@@ -51,14 +89,18 @@
             (sdl2:gl-make-current window gl-context)
             (sdl2:hide-cursor)
             (gl:enable :depth-test)
-            (gl:clear-color 19/255 19/255 39/255 1.0)
-            (gl:clear :color-buffer)
-            (let ((coords (make-gl-array :float #(0.0 1.0 -1.0
-                                                  1.0 1.0 -1.0
-                                                  1.0 0.0 -1.0
-                                                  0.0 0.0 -1.0
-                                                  0.0 1.0 -1.0))))
+            (gl:clear-color 0.0 0 0 1.0)
+            (gl:clear :color-buffer :depth-buffer)
+            (let ((coords (make-gl-array :float #(-0.5  0.5 -1.0
+                                                   0.5  0.5 -1.0
+                                                   0.5 -0.5 -1.0
+                                                  -0.5 -0.5 -1.0
+                                                  -0.5  0.5 -1.0))))
               (gl:use-program program)
+              (gl:uniform-matrix (gl:get-uniform-location program "projection_matrix") 4
+                                 (vector (perspective 45.0 (/ width height) 0.1 100.0)))
+              (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
+                                 (vector (look-at '(2.0 2.0 -1.0) '(0.0 0.0 -3.0) '(0.0 1.0 0.0))))
               (gl:bind-buffer :array-buffer (nth 0 buffers))
               (gl:buffer-data :array-buffer :static-draw coords)
               (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
