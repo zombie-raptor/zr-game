@@ -72,13 +72,13 @@
 ;; https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
 (defun look-at (eye center up)
   (let* ((f (normalize (mapcar #'- center eye)))
-         (up-hat (normalize up))
-         (s (cross-product f up-hat))
+         (s (cross-product f (normalize up)))
          (u (cross-product (normalize s) f)))
-    (vector (nth 0 s) (nth 1 s) (nth 2 s) 0
-            (nth 0 u) (nth 1 u) (nth 2 u) 0
-            (- (nth 0 f)) (- (nth 1 f)) (- (nth 2 f)) 0
-            0 0 0 1)))
+    (coerce (append s '(0)
+                    u '(0)
+                    (mapcar #'- f) '(0)
+                    '(0 0 0 1))
+            'vector)))
 
 (defun main-loop (&key (width 1280) (height 720) (title "cl-foo"))
   (sdl2:with-init (:everything)
