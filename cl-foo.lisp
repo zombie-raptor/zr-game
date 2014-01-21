@@ -38,11 +38,15 @@
           (progn ,@body)
        (gl:delete-buffers ,buffers))))
 
-(defun make-gl-array (type vect)
-  (let ((array (gl:alloc-gl-array type (length vect))))
+(defun gl-array (buffer-type buffer array-type vect)
+  (let ((array (gl:alloc-gl-array array-type (length vect))))
     (dotimes (i (length vect))
       (setf (gl:glaref array i) (aref vect i)))
-    array))
+    (gl:bind-buffer buffer-type buffer)
+    (gl:buffer-data buffer-type :static-draw array)
+    (gl:free-gl-array array)
+    (gl:bind-buffer buffer-type 0)
+    t))
 
 ;; Implementation of the gluPerspective matrix.
 ;; https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
@@ -83,33 +87,31 @@
   (sdl2:with-init (:everything)
     (sdl2:with-window (window :title title :w width :h height :flags '(:shown :opengl))
       (sdl2:with-gl-context (gl-context window)
+        (sdl2:gl-make-current window gl-context)
+        (sdl2:hide-cursor)
+        (gl:enable :depth-test)
         (with-buffers (buffers :count 1)
           (with-shaders (shaders program :shader-list '("test.vert" "test.frag") :dir (asdf:system-source-directory :cl-foo))
-            (sdl2:gl-make-current window gl-context)
-            (sdl2:hide-cursor)
-            (gl:enable :depth-test)
-            (gl:clear-color 0.0 0 0 1.0)
-            (let ((coords (make-gl-array :float #(-0.5  0.5 -1.0
-                                                   0.5  0.5 -1.0
-                                                   0.5 -0.5 -1.0
-                                                  -0.5 -0.5 -1.0
-                                                  -0.5  0.5 -1.0))))
-              (gl:use-program program)
-              (gl:clear :color-buffer :depth-buffer)
-              (gl:uniform-matrix (gl:get-uniform-location program "projection_matrix") 4
-                                 (vector (perspective 45.0 (/ width height) 0.1 100.0)))
-              (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
-                                 (vector (look-at #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
-              (gl:bind-buffer :array-buffer (elt buffers 0))
-              (gl:buffer-data :array-buffer :static-draw coords)
-              (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
-              (gl:enable-vertex-attrib-array 0)
-              (gl:draw-arrays :triangles 0 3)
-              (gl:draw-arrays :triangles 2 3)
-              (gl:disable-vertex-attrib-array 0)
-              (gl:flush)
-              (sdl2:gl-swap-window window)
-              (gl:free-gl-array coords))
+            (gl:use-program program)
+            (gl:uniform-matrix (gl:get-uniform-location program "projection_matrix") 4
+                               (vector (perspective 45.0 (/ width height) 0.1 100.0)))
+            (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
+                               (vector (look-at #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
+            (gl-array :array-buffer (elt buffers 0) :float #(-0.5  0.5 -1.0
+                                                              0.5  0.5 -1.0
+                                                              0.5 -0.5 -1.0
+                                                             -0.5 -0.5 -1.0
+                                                             -0.5  0.5 -1.0))
+            (gl:bind-buffer :array-buffer (elt buffers 0))
+            (gl:enable-vertex-attrib-array 0)
+            (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
+            (gl:clear-color 0 0 0 1)
+            (gl:clear :color-buffer :depth-buffer)
+            (gl:draw-arrays :triangles 0 3)
+            (gl:draw-arrays :triangles 2 3)
+            (gl:disable-vertex-attrib-array 0)
+            (gl:flush)
+            (sdl2:gl-swap-window window)
 
             (sdl2:with-event-loop (:method :poll)
               (:keydown
