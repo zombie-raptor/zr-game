@@ -47,9 +47,9 @@
 ;; Implementation of the gluPerspective matrix.
 ;; https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
 (defun perspective (fovy aspect znear zfar)
-  (let ((f (tan (* fovy (/ pi 360.0)))))
-    (vector (/ aspect f) 0.0 0.0 0.0
-            0.0 (/ f) 0.0 0.0
+  (let ((f (/ (tan (* fovy (/ pi 360.0))))))
+    (vector (/ f aspect) 0.0 0.0 0.0
+            0.0 f 0.0 0.0
             0.0 0.0 (/ (+ zfar znear) (- znear zfar)) (/ (* 2.0 zfar znear) (- znear zfar))
             0.0 0.0 -1.0 0.0)))
 
@@ -68,7 +68,7 @@
           (- (* (elt u 2) (elt v 0)) (* (elt u 0) (elt v 2)))
           (- (* (elt u 0) (elt v 1)) (* (elt u 1) (elt v 0)))))
 
-;; Very naive reimplementation of the gluLookAt matrix.
+;; Implementation of the gluLookAt matrix.
 ;; https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
 (defun look-at (eye center up)
   (let* ((f (normalize (map 'vector #'- center eye)))
@@ -100,7 +100,7 @@
                                  (vector (perspective 45.0 (/ width height) 0.1 100.0)))
               (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
                                  (vector (look-at #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
-              (gl:bind-buffer :array-buffer (nth 0 buffers))
+              (gl:bind-buffer :array-buffer (elt buffers 0))
               (gl:buffer-data :array-buffer :static-draw coords)
               (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
               (gl:enable-vertex-attrib-array 0)
