@@ -90,7 +90,7 @@
         (sdl2:gl-make-current window gl-context)
         (sdl2:hide-cursor)
         (gl:enable :depth-test)
-        (with-buffers (buffers :count 1)
+        (with-buffers (buffers :count 2)
           (with-shaders (shaders program :shader-list '("test.vert" "test.frag") :dir (asdf:system-source-directory :cl-foo))
             (gl:use-program program)
             (gl:uniform-matrix (gl:get-uniform-location program "projection_matrix") 4
@@ -100,15 +100,17 @@
             (gl-array :array-buffer (elt buffers 0) :float #(-0.5  0.5 -1.0
                                                               0.5  0.5 -1.0
                                                               0.5 -0.5 -1.0
-                                                             -0.5 -0.5 -1.0
-                                                             -0.5  0.5 -1.0))
+                                                             -0.5 -0.5 -1.0))
+            (gl-array :element-array-buffer (elt buffers 1) :unsigned-short #(0 1 2
+                                                                              2 3 0))
             (gl:bind-buffer :array-buffer (elt buffers 0))
             (gl:enable-vertex-attrib-array 0)
             (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
+            (gl:bind-buffer :element-array-buffer (elt buffers 1))
+            (gl:bind-vertex-array 0)
             (gl:clear-color 0 0 0 1)
             (gl:clear :color-buffer :depth-buffer)
-            (gl:draw-arrays :triangles 0 3)
-            (gl:draw-arrays :triangles 2 3)
+            (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 6)
             (gl:disable-vertex-attrib-array 0)
             (gl:flush)
             (sdl2:gl-swap-window window)
