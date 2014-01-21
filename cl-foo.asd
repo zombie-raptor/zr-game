@@ -6,7 +6,6 @@
   :author "Michael Babich"
   :license "MIT"
   :depends-on (:sdl2
-               :alexandria
-               :cl-glu)
+               :alexandria)
   :components ((:file "package")
                (:file "cl-foo")))
