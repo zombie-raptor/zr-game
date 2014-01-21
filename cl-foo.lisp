@@ -53,32 +53,32 @@
             0.0 0.0 (/ (+ zfar znear) (- znear zfar)) (/ (* 2.0 zfar znear) (- znear zfar))
             0.0 0.0 -1.0 0.0)))
 
-;; Calculates the magnitude of a list representing a mathematical
-;; vector.
-(defun magnitude (l)
-  (sqrt (reduce '+ (mapcar #'(lambda (x) (expt x 2)) l))))
+;; Returns scalar from vector.
+(defun magnitude (v)
+  (sqrt (reduce '+ (map 'vector #'(lambda (x) (expt x 2)) v))))
 
-;; Returns a unit vector of a list representing a mathematical vector.
-(defun normalize (l)
-  (mapcar #'(lambda (x) (/ x (magnitude l))) l))
+;; Returns unit vector from vector.
+(defun normalize (v)
+  (let ((c (magnitude v)))
+    (map 'vector #'(lambda (x) (/ x c)) v)))
 
 ;; Using one of the definitions from Wikipedia. I hope this works.
-(defun cross-product (l1 l2)
-  (list (- (* (nth 1 l1) (nth 2 l2)) (nth 2 l1) (nth 1 l2))
-        (- (* (nth 2 l1) (nth 0 l2)) (nth 0 l1) (nth 2 l2))
-        (- (* (nth 0 l1) (nth 1 l2)) (nth 1 l1) (nth 0 l2))))
+(defun cross-product (u v)
+  (vector (- (* (elt u 1) (elt v 2)) (elt u 2) (elt v 1))
+          (- (* (elt u 2) (elt v 0)) (elt u 0) (elt v 2))
+          (- (* (elt u 0) (elt v 1)) (elt u 1) (elt v 0))))
 
 ;; Very naive reimplementation of the gluLookAt matrix.
 ;; https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
 (defun look-at (eye center up)
-  (let* ((f (normalize (mapcar #'- center eye)))
+  (let* ((f (normalize (map 'vector #'- center eye)))
          (s (cross-product f (normalize up)))
          (u (cross-product (normalize s) f)))
-    (coerce (append s '(0)
-                    u '(0)
-                    (mapcar #'- f) '(0)
-                    '(0 0 0 1))
-            'vector)))
+    (concatenate 'vector
+                 s #(0)
+                 u #(0)
+                 (map 'vector #'- f) #(0)
+                 #(0 0 0 1))))
 
 (defun main-loop (&key (width 1280) (height 720) (title "cl-foo"))
   (sdl2:with-init (:everything)
@@ -90,17 +90,17 @@
             (sdl2:hide-cursor)
             (gl:enable :depth-test)
             (gl:clear-color 0.0 0 0 1.0)
-            (gl:clear :color-buffer :depth-buffer)
             (let ((coords (make-gl-array :float #(-0.5  0.5 -1.0
                                                    0.5  0.5 -1.0
                                                    0.5 -0.5 -1.0
                                                   -0.5 -0.5 -1.0
                                                   -0.5  0.5 -1.0))))
               (gl:use-program program)
+              (gl:clear :color-buffer :depth-buffer)
               (gl:uniform-matrix (gl:get-uniform-location program "projection_matrix") 4
                                  (vector (perspective 45.0 (/ width height) 0.1 100.0)))
               (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
-                                 (vector (look-at '(2.0 2.0 -1.0) '(0.0 0.0 -3.0) '(0.0 1.0 0.0))))
+                                 (vector (look-at #(0.0 1.5 10.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
               (gl:bind-buffer :array-buffer (nth 0 buffers))
               (gl:buffer-data :array-buffer :static-draw coords)
               (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
@@ -108,9 +108,9 @@
               (gl:draw-arrays :triangles 0 3)
               (gl:draw-arrays :triangles 2 3)
               (gl:disable-vertex-attrib-array 0)
+              (gl:flush)
+              (sdl2:gl-swap-window window)
               (gl:free-gl-array coords))
-            (gl:flush)
-            (sdl2:gl-swap-window window)
 
             (sdl2:with-event-loop (:method :poll)
               (:keydown
