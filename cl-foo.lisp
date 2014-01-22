@@ -83,6 +83,12 @@
             (- (elt f 0)) (- (elt f 1)) (- (elt f 2)) 0.0
             0.0 0.0 0.0 1.0)))
 
+(defun translation (x y z)
+  (vector 1.0 0.0 0.0 x
+          0.0 1.0 0.0 y
+          0.0 0.0 1.0 z
+          0.0 0.0 0.0 1.0))
+
 (defun main-loop (&key (width 1280) (height 720) (title "cl-foo"))
   (sdl2:with-init (:everything)
     (sdl2:with-window (window :title title :w width :h height :flags '(:shown :opengl))
@@ -97,11 +103,12 @@
                                (vector (perspective 45.0 (/ width height) 0.1 100.0)))
             (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
                                (vector (look-at #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
-            (gl:uniformfv (gl:get-uniform-location program "offset") #(-3.0 1.0 -5.0))
-            (gl-array :array-buffer (elt buffers 0) :float #(-0.5 -0.5 -5.0
-                                                             0.5 -0.5 -5.0
-                                                             0.5 0.5 -5.0
-                                                             -0.5 0.5 -5.0))
+            (gl:uniform-matrix (gl:get-uniform-location program "translation_matrix") 4
+                               (vector (translation -3.0 1.0 -5.0)))
+            (gl-array :array-buffer (elt buffers 0) :float #(-1.0 -1.0 -1.0
+                                                             1.0 -1.0 -1.0
+                                                             1.0 1.0 -1.0
+                                                             -1.0 1.0 -1.0))
             (gl-array :element-array-buffer (elt buffers 1) :unsigned-short #(0 1 2
                                                                               2 3 0))
             (gl:bind-buffer :array-buffer (elt buffers 0))
