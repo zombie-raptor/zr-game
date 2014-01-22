@@ -89,6 +89,49 @@
           0.0 0.0 1.0 z
           0.0 0.0 0.0 1.0))
 
+;; Each of the 6 faces in a cube is a pair of two triangles who share
+;; the beginning and end points. Each loop here is a face.
+(defun get-cube-elements ()
+  (let ((v nil))
+    (dotimes (i 6)
+      (let ((x (* i 4)))
+        (setf v (concatenate 'vector v (vector x (+ x 1) (+ x 2) (+ x 2) (+ x 3) x)))))
+    v))
+
+;; fixme: Can I replace this with an algorithm to generate these
+;; coordinates on startup and make the cube's geometry more obvious?
+;; This could then generalize into other geometric shapes perhaps.
+(defun get-cube-points ()
+  #(-1.0 -1.0 1.0
+    1.0 -1.0 1.0
+    1.0 1.0 1.0
+    -1.0 1.0 1.0
+
+    -1.0 1.0 1.0
+    1.0 1.0 1.0
+    1.0 1.0 -1.0
+    -1.0 1.0 -1.0
+
+    1.0 -1.0 -1.0
+    -1.0 -1.0 -1.0
+    -1.0 1.0 -1.0
+    1.0 1.0 -1.0
+
+    -1.0 -1.0 -1.0
+    1.0 -1.0 -1.0
+    1.0 -1.0 1.0
+    -1.0 -1.0 1.0
+
+    -1.0 -1.0 -1.0
+    -1.0 -1.0 1.0
+    -1.0 1.0 1.0
+    -1.0 1.0 -1.0
+
+    1.0 -1.0 1.0
+    1.0 -1.0 -1.0
+    1.0 1.0 -1.0
+    1.0 1.0 1.0))
+
 (defun main-loop (&key (width 1280) (height 720) (title "cl-foo"))
   (sdl2:with-init (:everything)
     (sdl2:with-window (window :title title :w width :h height :flags '(:shown :opengl))
@@ -104,13 +147,9 @@
             (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
                                (vector (look-at #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
             (gl:uniform-matrix (gl:get-uniform-location program "translation_matrix") 4
-                               (vector (translation -3.0 1.0 -5.0)))
-            (gl-array :array-buffer (elt buffers 0) :float #(-1.0 -1.0 -1.0
-                                                             1.0 -1.0 -1.0
-                                                             1.0 1.0 -1.0
-                                                             -1.0 1.0 -1.0))
-            (gl-array :element-array-buffer (elt buffers 1) :unsigned-short #(0 1 2
-                                                                              2 3 0))
+                               (vector (translation -3.0 -3.0 -10.0)))
+            (gl-array :array-buffer (elt buffers 0) :float (get-cube-points))
+            (gl-array :element-array-buffer (elt buffers 1) :unsigned-short (get-cube-elements))
             (gl:bind-buffer :array-buffer (elt buffers 0))
             (gl:bind-buffer :element-array-buffer (elt buffers 1))
             (gl:enable-vertex-attrib-array 0)
@@ -118,7 +157,7 @@
             (gl:bind-vertex-array 0)
             (gl:clear-color 0 0 0 1)
             (gl:clear :color-buffer :depth-buffer)
-            (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 6)
+            (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 36)
             (gl:disable-vertex-attrib-array 0)
             (gl:use-program 0)
             (gl:flush)
