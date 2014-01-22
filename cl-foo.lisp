@@ -146,8 +146,6 @@
                                (vector (perspective 45.0 (/ width height) 0.1 100.0)))
             (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
                                (vector (look-at #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
-            (gl:uniform-matrix (gl:get-uniform-location program "translation_matrix") 4
-                               (vector (translation -3.0 -3.0 -10.0)))
             (gl-array :array-buffer (elt buffers 0) :float (get-cube-points))
             (gl-array :element-array-buffer (elt buffers 1) :unsigned-short (get-cube-elements))
             (gl:bind-buffer :array-buffer (elt buffers 0))
@@ -157,7 +155,12 @@
             (gl:bind-vertex-array 0)
             (gl:clear-color 0 0 0 1)
             (gl:clear :color-buffer :depth-buffer)
-            (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 36)
+            (dotimes (i 4)
+              (let ((x (+ -3.0 (* i 2)))
+                    (y (+ -3.0 (* i 2))))
+              (gl:uniform-matrix (gl:get-uniform-location program "translation_matrix") 4
+                                 (vector (translation x y -10.0))))
+              (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 36))
             (gl:disable-vertex-attrib-array 0)
             (gl:use-program 0)
             (gl:flush)
