@@ -97,21 +97,23 @@
                                (vector (perspective 45.0 (/ width height) 0.1 100.0)))
             (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
                                (vector (look-at #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
-            (gl-array :array-buffer (elt buffers 0) :float #(-0.5  0.5 -1.0
-                                                              0.5  0.5 -1.0
-                                                              0.5 -0.5 -1.0
-                                                             -0.5 -0.5 -1.0))
+            (gl:uniformfv (gl:get-uniform-location program "offset") #(-3.0 1.0 -5.0))
+            (gl-array :array-buffer (elt buffers 0) :float #(-0.5 -0.5 -5.0
+                                                             0.5 -0.5 -5.0
+                                                             0.5 0.5 -5.0
+                                                             -0.5 0.5 -5.0))
             (gl-array :element-array-buffer (elt buffers 1) :unsigned-short #(0 1 2
                                                                               2 3 0))
             (gl:bind-buffer :array-buffer (elt buffers 0))
+            (gl:bind-buffer :element-array-buffer (elt buffers 1))
             (gl:enable-vertex-attrib-array 0)
             (gl:vertex-attrib-pointer 0 3 :float nil 0 0)
-            (gl:bind-buffer :element-array-buffer (elt buffers 1))
             (gl:bind-vertex-array 0)
             (gl:clear-color 0 0 0 1)
             (gl:clear :color-buffer :depth-buffer)
             (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 6)
             (gl:disable-vertex-attrib-array 0)
+            (gl:use-program 0)
             (gl:flush)
             (sdl2:gl-swap-window window)
 
