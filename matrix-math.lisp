@@ -3,7 +3,7 @@
 ;;;; shaders. If these turn out to be very slow, MAP will have to be
 ;;;; replaced with something else.
 
-;(in-package #:cl-foo)
+(in-package #:cl-foo)
 
 ;;; Implementation of the gluPerspective matrix.
 ;;; https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml

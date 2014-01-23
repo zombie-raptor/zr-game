@@ -1,10 +1,15 @@
-;;;; This file might do something some day.
+;;;; This file is currently being used to try to get some very basic
+;;;; OpenGL things rendered. As I learn more about what OpenGL
+;;;; expects, useful functions and macros will be spun off into their
+;;;; own files.
+
+;;;; What will this evolve into? I have no clue.
 
 (in-package #:cl-foo)
 
-;; Currently assumes .vert or .frag are the only possible extensions
-;; for shader files, and reads them in as a string.
 (defun read-shader (filename directory)
+  ;; FIXME: Assumes .vert or .frag are the only possible extensions
+  ;; for shader files.
   (let ((shader (gl:create-shader (if (string= ".vert" (subseq filename (- (length filename) 5)))
                                       :vertex-shader
                                       :fragment-shader))))
@@ -24,6 +29,8 @@
     program))
 
 (defmacro with-shaders ((shaders program &key shader-list dir) &body body)
+  ;; FIXME: Assumes that all of the given shaders are used in the same
+  ;; program.
   `(let* ((,shaders (mapcar #'(lambda (x) (read-shader x ,dir)) ,shader-list))
           (,program (shader-program ,shaders)))
      (unwind-protect
@@ -38,6 +45,7 @@
           (progn ,@body)
        (gl:delete-buffers ,buffers))))
 
+;;; Puts a vector into a GL buffer as a GL array.
 (defun gl-array (buffer-type buffer array-type vect)
   (let ((array (gl:alloc-gl-array array-type (length vect))))
     (dotimes (i (length vect))
@@ -57,7 +65,7 @@
         (setf v (concatenate 'vector v (vector x (+ x 1) (+ x 2) (+ x 2) (+ x 3) x)))))
     v))
 
-;; fixme: Can I replace this with an algorithm to generate these
+;; FIXME: Can I replace this with an algorithm to generate these
 ;; coordinates on startup and make the cube's geometry more obvious?
 ;; This could then generalize into other geometric shapes perhaps.
 (defun get-cube-points ()
@@ -91,7 +99,7 @@
     1.0 1.0 -1.0
     1.0 1.0 1.0))
 
-(defun main-loop (&key (width 1280) (height 720) (title "cl-foo"))
+(defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test"))
   (sdl2:with-init (:everything)
     (sdl2:with-window (window :title title :w width :h height :flags '(:shown :opengl))
       (sdl2:with-gl-context (gl-context window)
@@ -126,9 +134,10 @@
             (sdl2:gl-swap-window window)
 
             (sdl2:with-event-loop (:method :poll)
+              ;; FIXME: Currently does nothing. It's kept here as a
+              ;; reminder of the syntax.
               (:keydown
                (:keysym keysym)
-               ;; fixme: make the keys do something again
                (let ((scancode (sdl2:scancode-value keysym)))
                  (cond
                    ((sdl2:scancode= scancode :scancode-w) "W")
