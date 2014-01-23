@@ -8,4 +8,5 @@
   :depends-on (:sdl2
                :alexandria)
   :components ((:file "package")
-               (:file "cl-foo")))
+               (:file "cl-foo")
+               (:file "matrix-math")))

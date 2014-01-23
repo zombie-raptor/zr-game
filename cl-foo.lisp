@@ -48,47 +48,6 @@
     (gl:bind-buffer buffer-type 0)
     t))
 
-;; Implementation of the gluPerspective matrix.
-;; https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
-(defun perspective (fovy aspect znear zfar)
-  (let ((f (/ (tan (* fovy (/ pi 360.0))))))
-    (vector (/ f aspect) 0.0 0.0 0.0
-            0.0 f 0.0 0.0
-            0.0 0.0 (/ (+ zfar znear) (- znear zfar)) (/ (* 2.0 zfar znear) (- znear zfar))
-            0.0 0.0 -1.0 0.0)))
-
-;; Returns scalar from vector.
-(defun magnitude (v)
-  (sqrt (reduce '+ (map 'vector #'(lambda (x) (expt x 2)) v))))
-
-;; Returns unit vector from vector.
-(defun normalize (v)
-  (let ((c (magnitude v)))
-    (map 'vector #'(lambda (x) (/ x c)) v)))
-
-;; Returns vector from two vectors.
-(defun cross-product (u v)
-  (vector (- (* (elt u 1) (elt v 2)) (* (elt u 2) (elt v 1)))
-          (- (* (elt u 2) (elt v 0)) (* (elt u 0) (elt v 2)))
-          (- (* (elt u 0) (elt v 1)) (* (elt u 1) (elt v 0)))))
-
-;; Implementation of the gluLookAt matrix.
-;; https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
-(defun look-at (eye center up)
-  (let* ((f (normalize (map 'vector #'- center eye)))
-         (s (cross-product f (normalize up)))
-         (u (cross-product (normalize s) f)))
-    (vector (elt s 0) (elt s 1) (elt s 2) 0.0
-            (elt u 0) (elt u 1) (elt u 2) 0.0
-            (- (elt f 0)) (- (elt f 1)) (- (elt f 2)) 0.0
-            0.0 0.0 0.0 1.0)))
-
-(defun translation (x y z)
-  (vector 1.0 0.0 0.0 x
-          0.0 1.0 0.0 y
-          0.0 0.0 1.0 z
-          0.0 0.0 0.0 1.0))
-
 ;; Each of the 6 faces in a cube is a pair of two triangles who share
 ;; the beginning and end points. Each loop here is a face.
 (defun get-cube-elements ()
@@ -143,9 +102,9 @@
           (with-shaders (shaders program :shader-list '("test.vert" "test.frag") :dir (asdf:system-source-directory :cl-foo))
             (gl:use-program program)
             (gl:uniform-matrix (gl:get-uniform-location program "projection_matrix") 4
-                               (vector (perspective 45.0 (/ width height) 0.1 100.0)))
+                               (vector (perspective-matrix 45.0 (/ width height) 0.1 100.0)))
             (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
-                               (vector (look-at #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
+                               (vector (look-at-matrix #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
             (gl-array :array-buffer (elt buffers 0) :float (get-cube-points))
             (gl-array :element-array-buffer (elt buffers 1) :unsigned-short (get-cube-elements))
             (gl:bind-buffer :array-buffer (elt buffers 0))
@@ -159,7 +118,7 @@
               (let ((x (+ -3.0 (* i 2)))
                     (y (+ -3.0 (* i 2))))
               (gl:uniform-matrix (gl:get-uniform-location program "translation_matrix") 4
-                                 (vector (translation x y -10.0))))
+                                 (vector (translation-matrix x y -10.0))))
               (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 36))
             (gl:disable-vertex-attrib-array 0)
             (gl:use-program 0)
