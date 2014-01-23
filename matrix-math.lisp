@@ -5,14 +5,7 @@
 
 (in-package #:cl-foo)
 
-;;; Implementation of the gluPerspective matrix.
-;;; https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
-(defun perspective-matrix (fovy aspect znear zfar)
-  (let ((f (/ (tan (* fovy (/ pi 360.0))))))
-    (vector (/ f aspect) 0.0 0.0 0.0
-            0.0 f 0.0 0.0
-            0.0 0.0 (/ (+ zfar znear) (- znear zfar)) (/ (* 2.0 zfar znear) (- znear zfar))
-            0.0 0.0 -1.0 0.0)))
+;;; VECTOR OPERATIONS
 
 ;;; Returns scalar from vector.
 (defun magnitude (v)
@@ -32,6 +25,17 @@
 ;;; Returns scalar from two vectors.
 (defun dot-product (u v)
   (reduce '+ (map 'vector '* u v)))
+
+;;; SPECIAL MATRICES
+
+;;; Implementation of the gluPerspective matrix.
+;;; https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
+(defun perspective-matrix (fovy aspect znear zfar)
+  (let ((f (/ (tan (* fovy (/ pi 360.0))))))
+    (vector (/ f aspect) 0.0 0.0 0.0
+            0.0 f 0.0 0.0
+            0.0 0.0 (/ (+ zfar znear) (- znear zfar)) (/ (* 2.0 zfar znear) (- znear zfar))
+            0.0 0.0 -1.0 0.0)))
 
 ;;; Implementation of the gluLookAt matrix.
 ;;; https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
@@ -61,6 +65,8 @@
           0.0 1.0 0.0 0.0
           0.0 0.0 1.0 0.0
           0.0 0.0 0.0 (/ c)))
+
+;;; MATRIX OPERATIONS
 
 ;;; fixme: After this point matrices are represented with two
 ;;; dimensions, as vectors of vectors, with each vector being a
