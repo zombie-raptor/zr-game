@@ -9,7 +9,7 @@
 
 ;;; Returns scalar from vector.
 (defun magnitude (v)
-  (sqrt (reduce '+ (map 'vector #'(lambda (x) (expt x 2)) v))))
+  (sqrt (reduce #'+ (map 'vector #'(lambda (x) (expt x 2)) v))))
 
 ;;; Returns unit vector from vector.
 (defun normalize (v)
@@ -24,7 +24,7 @@
 
 ;;; Returns scalar from two vectors.
 (defun dot-product (u v)
-  (reduce '+ (map 'vector '* u v)))
+  (reduce #'+ (map 'vector #'* u v)))
 
 ;;; SPECIAL MATRICES
 
