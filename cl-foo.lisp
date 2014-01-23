@@ -117,8 +117,8 @@
             (dotimes (i 4)
               (let ((x (+ -3.0 (* i 2)))
                     (y (+ -3.0 (* i 2))))
-              (gl:uniform-matrix (gl:get-uniform-location program "translation_matrix") 4
-                                 (vector (translation-matrix x y -10.0))))
+                (gl:uniform-matrix (gl:get-uniform-location program "translation_matrix") 4
+                                   (vector (translation-matrix x y -10.0))))
               (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 36))
             (gl:disable-vertex-attrib-array 0)
             (gl:use-program 0)
