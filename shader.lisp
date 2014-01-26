@@ -5,20 +5,20 @@
 (in-package #:cl-foo)
 
 (defun make-glsl-operator (symbol first rest)
-  (case symbol
-    ((+) (format nil "(~S~{ + ~S~})" first rest))
+  (ccase symbol
+    ((+) (format nil "(~A~{ + ~A~})" first rest))
     ((-) (if (eq (length rest) 0)
-             (format nil "-(~S)" first)
-             (format nil "(~S~{ - ~S~})" first rest)))
-    ((*) (format nil "(~S~{ * ~S~})" first rest))
-    ((/) (format nil "(~S~{ / ~S~})" first rest))
-    ((>) (format nil "(~S~{ > ~S~})" first rest))
-    ((<) (format nil "(~S~{ < ~S~})" first rest))
-    ((>=) (format nil "(~S~{ >= ~S~})" first rest))
-    ((<=) (format nil "(~S~{ <= ~S~})" first rest))
-    ((not) (format nil "!(~S)" first))
-    ((and) (format nil "(~S~{ && ~S~})" first rest))
-    ((or) (format nil "(~S~{ || ~S~})" first rest))))
+             (format nil "-(~A)" first)
+             (format nil "(~A~{ - ~A~})" first rest)))
+    ((*) (format nil "(~A~{ * ~A~})" first rest))
+    ((/) (format nil "(~A~{ / ~A~})" first rest))
+    ((>) (format nil "(~A~{ > ~A~})" first rest))
+    ((<) (format nil "(~A~{ < ~A~})" first rest))
+    ((>=) (format nil "(~A~{ >= ~A~})" first rest))
+    ((<=) (format nil "(~A~{ <= ~A~})" first rest))
+    ((not) (format nil "!(~A)" first))
+    ((and) (format nil "(~A~{ && ~A~})" first rest))
+    ((or) (format nil "(~A~{ || ~A~})" first rest))))
 
 (defun make-glsl-line (l)
   (let ((symbol (nth 0 l)))
@@ -30,6 +30,15 @@
       ((in-location) (format nil "layout(location = ~D) in ~A ~A;~%" (nth 1 l) (nth 2 l) (nth 3 l)))
       ((out-location) (format nil "layout(location = ~D) out ~A ~A;~%" (nth 1 l) (nth 2 l) (nth 3 l)))
       ((uniform) (format nil "uniform ~A ~A;~%" (nth 1 l) (nth 2 l))))))
+
+;;; FIXME: At the moment doesn't take arguments and doesn't return things.
+;;; FIXME: At the moment only takes in one line.
+;;; FIXME: At the moment just takes in a GLSL string line, not a list.
+(defun make-glsl-function (name line)
+  (concatenate 'string
+               (format nil "void ~A(void)~%{~%  " name)
+               line
+               (format nil "~%}")))
 
 (defun read-shader (shader-string shader-type)
   (let ((shader (gl:create-shader shader-type)))
