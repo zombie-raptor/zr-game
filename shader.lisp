@@ -24,8 +24,11 @@
   (let ((symbol (nth 0 l)))
     (ccase symbol
       ((+ - * / > < >= <= not and or) (make-glsl-operator symbol (nth 1 l) (nthcdr 2 l)))
-      ((in) (format nil "layout(location = ~D) in ~A ~A;~%" (nth 1 l) (nth 2 l) (nth 3 l)))
-      ((out) (format nil "layout(location = ~D) out ~A ~A;~%" (nth 1 l) (nth 2 l) (nth 3 l)))
+      ((version) (format nil "#version ~D~%~%" (nth 1 l)))
+      ((in) (format nil "in ~A ~A;~%" (nth 1 l) (nth 2 l)))
+      ((out) (format nil "out ~A ~A;~%" (nth 1 l) (nth 2 l)))
+      ((in-location) (format nil "layout(location = ~D) in ~A ~A;~%" (nth 1 l) (nth 2 l) (nth 3 l)))
+      ((out-location) (format nil "layout(location = ~D) out ~A ~A;~%" (nth 1 l) (nth 2 l) (nth 3 l)))
       ((uniform) (format nil "uniform ~A ~A;~%" (nth 1 l) (nth 2 l))))))
 
 (defun read-shader (shader-string shader-type)

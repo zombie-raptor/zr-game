@@ -9,16 +9,16 @@
 
 (defparameter *test-shaders*
   (list (concatenate 'string
-                     (format nil "#version 330~%~%")
-                     (make-glsl-line '(in 0 "vec3" "position"))
+                     (make-glsl-line '(version 330))
+                     (make-glsl-line '(in-location 0 "vec3" "position"))
                      (make-glsl-line '(uniform "mat4" "projection_matrix"))
                      (make-glsl-line '(uniform "mat4" "view_matrix"))
                      (make-glsl-line '(uniform "mat4" "translation_matrix"))
                      (format nil "void main(void)~%{~%  gl_Position = projection_matrix * view_matrix * translation_matrix * vec4(position, 1.0);~%}"))
         (concatenate 'string
-                     (format nil "#version 330~%~%")
-                     (format nil "out vec4 out_color;~%")
-                     (format nil "void main(void)~%{~%  out_color = mix(vec4(1.0f, 0.5f, 0.5f, 1.0f), vec4(0.5f, 0.5f, 1.0f, 1.0f), (gl_FragCoord.y) / 720.0f);~%}"))))
+                     (make-glsl-line '(version 330))
+                     (make-glsl-line '(out "vec4" "out_color"))
+                     (format nil "void main(void)~%{~%  out_color = vec4(0.5f, 0.5f, 1.0f, 1.0f);~%}"))))
 
 (defmacro with-buffers ((buffers &key (count 1)) &body body)
   `(let ((,buffers (gl:gen-buffers ,count)))
