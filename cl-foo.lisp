@@ -7,38 +7,6 @@
 
 (in-package #:cl-foo)
 
-(defun read-shader (filename directory)
-  ;; FIXME: Assumes .vert or .frag are the only possible extensions
-  ;; for shader files.
-  (let ((shader (gl:create-shader (if (string= ".vert" (subseq filename (- (length filename) 5)))
-                                      :vertex-shader
-                                      :fragment-shader))))
-    (gl:shader-source shader (alexandria:read-file-into-string (merge-pathnames directory filename)))
-    (gl:compile-shader shader)
-    (if (not (gl:get-shader shader :compile-status))
-        (error (concatenate 'string "Error in " filename "~%" (gl:get-shader-info-log shader))))
-    shader))
-
-(defun shader-program (shaders)
-  (let ((program (gl:create-program)))
-    (mapcar #'(lambda (shader) (gl:attach-shader program shader)) shaders)
-    (gl:link-program program)
-    (if (not (gl:get-program program :link-status))
-        (error (concatenate 'string "Error in shader program~%" (gl:get-program-info-log program))))
-    (mapcar #'(lambda (shader) (gl:detach-shader program shader)) shaders)
-    program))
-
-(defmacro with-shaders ((shaders program &key shader-list dir) &body body)
-  ;; FIXME: Assumes that all of the given shaders are used in the same
-  ;; program.
-  `(let* ((,shaders (mapcar #'(lambda (x) (read-shader x ,dir)) ,shader-list))
-          (,program (shader-program ,shaders)))
-     (unwind-protect
-          (progn ,@body)
-       (progn
-         (mapcar #'gl:delete-shader ,shaders)
-         (gl:delete-program ,program)))))
-
 (defmacro with-buffers ((buffers &key (count 1)) &body body)
   `(let ((,buffers (gl:gen-buffers ,count)))
      (unwind-protect

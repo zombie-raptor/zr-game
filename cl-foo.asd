@@ -9,4 +9,5 @@
                :alexandria)
   :components ((:file "package")
                (:file "cl-foo")
-               (:file "matrix-math")))
+               (:file "matrix-math")
+               (:file "shader")))
