@@ -4,26 +4,32 @@
 
 (in-package #:cl-foo)
 
-(defun make-glsl-operator (symbol first rest)
+(defun make-glsl-binary-operation (symbol first rest)
   (ccase symbol
     ((+) (format nil "(~A~{ + ~A~})" first rest))
-    ((-) (if (eq (length rest) 0)
-             (format nil "-(~A)" first)
-             (format nil "(~A~{ - ~A~})" first rest)))
+    ((-) (format nil "(~A~{ - ~A~})" first rest))
     ((*) (format nil "(~A~{ * ~A~})" first rest))
     ((/) (format nil "(~A~{ / ~A~})" first rest))
     ((>) (format nil "(~A~{ > ~A~})" first rest))
     ((<) (format nil "(~A~{ < ~A~})" first rest))
     ((>=) (format nil "(~A~{ >= ~A~})" first rest))
     ((<=) (format nil "(~A~{ <= ~A~})" first rest))
-    ((not) (format nil "!(~A)" first))
     ((and) (format nil "(~A~{ && ~A~})" first rest))
     ((or) (format nil "(~A~{ || ~A~})" first rest))))
+
+(defun make-glsl-unary-operation (symbol first)
+  (ccase symbol
+    ((not) (format nil "!(~A)" first))
+    ((-) (format nil "-(~A)" first))))
 
 (defun make-glsl-line (l)
   (let ((symbol (nth 0 l)))
     (ccase symbol
-      ((+ - * / > < >= <= not and or) (make-glsl-operator symbol (nth 1 l) (nthcdr 2 l)))
+      ((+ * / > < >= <= and or) (make-glsl-binary-operation symbol (nth 1 l) (nthcdr 2 l)))
+      ((not) (make-glsl-unary-operation symbol (nth 1 l)))
+      ((-) (if (eq (length (rest l)) 1)
+               (make-glsl-unary-operation symbol (nth 1 l))
+               (make-glsl-binary-operation symbol (nth 1 l) (nthcdr 2 l))))
       ((version) (format nil "#version ~D~%~%" (nth 1 l)))
       ((in) (format nil "in ~A ~A;~%" (nth 1 l) (nth 2 l)))
       ((out) (format nil "out ~A ~A;~%" (nth 1 l) (nth 2 l)))
