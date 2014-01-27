@@ -12,4 +12,5 @@
            ;; Shaders
            #:read-shader
            #:shader-program
-           #:with-shaders))
+           #:with-shaders
+           #:make-glsl-shader))

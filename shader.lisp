@@ -4,38 +4,44 @@
 
 (in-package #:cl-foo)
 
-(defun make-glsl-binary-operation (symbol first rest)
-  (ccase symbol
-    ((+) (format nil "(~A~{ + ~A~})" first rest))
-    ((-) (format nil "(~A~{ - ~A~})" first rest))
-    ((*) (format nil "(~A~{ * ~A~})" first rest))
-    ((/) (format nil "(~A~{ / ~A~})" first rest))
-    ((>) (format nil "(~A~{ > ~A~})" first rest))
-    ((<) (format nil "(~A~{ < ~A~})" first rest))
-    ((>=) (format nil "(~A~{ >= ~A~})" first rest))
-    ((<=) (format nil "(~A~{ <= ~A~})" first rest))
-    ((and) (format nil "(~A~{ && ~A~})" first rest))
-    ((or) (format nil "(~A~{ || ~A~})" first rest))))
+(defun make-glsl-binary-operation (symbol first-elt rest-elt)
+  (ecase symbol
+    ((+) (format nil "(~A~{ + ~A~})" first-elt rest-elt))
+    ((-) (format nil "(~A~{ - ~A~})" first-elt rest-elt))
+    ((*) (format nil "(~A~{ * ~A~})" first-elt rest-elt))
+    ((/) (format nil "(~A~{ / ~A~})" first-elt rest-elt))
+    ((>) (format nil "(~A~{ > ~A~})" first-elt rest-elt))
+    ((<) (format nil "(~A~{ < ~A~})" first-elt rest-elt))
+    ((>=) (format nil "(~A~{ >= ~A~})" first-elt rest-elt))
+    ((<=) (format nil "(~A~{ <= ~A~})" first-elt rest-elt))
+    ((and) (format nil "(~A~{ && ~A~})" first-elt rest-elt))
+    ((or) (format nil "(~A~{ || ~A~})" first-elt rest-elt))))
 
-(defun make-glsl-unary-operation (symbol first)
-  (ccase symbol
-    ((not) (format nil "!(~A)" first))
-    ((-) (format nil "-(~A)" first))))
+(defun make-glsl-unary-operation (symbol first-elt)
+  (ecase symbol
+    ((not) (format nil "!(~A)" first-elt))
+    ((-) (format nil "-(~A)" first-elt))))
+
+(defun make-glsl-operation (symbol l)
+  (let ((first-elt (first l))
+        (rest-elt (rest l)))
+    (ecase symbol
+      ((+ * / > < >= <= and or) (make-glsl-binary-operation symbol first-elt rest-elt))
+      ((not) (make-glsl-unary-operation symbol first-elt))
+      ((-) (if (eq (length rest-elt) 0)
+               (make-glsl-unary-operation symbol first-elt)
+               (make-glsl-binary-operation symbol first-elt rest-elt))))))
 
 (defun make-glsl-line (l)
-  (let ((symbol (nth 0 l)))
-    (ccase symbol
-      ((+ * / > < >= <= and or) (make-glsl-binary-operation symbol (nth 1 l) (nthcdr 2 l)))
-      ((not) (make-glsl-unary-operation symbol (nth 1 l)))
-      ((-) (if (eq (length (rest l)) 1)
-               (make-glsl-unary-operation symbol (nth 1 l))
-               (make-glsl-binary-operation symbol (nth 1 l) (nthcdr 2 l))))
-      ((version) (format nil "#version ~D~%~%" (nth 1 l)))
-      ((in) (format nil "in ~A ~A;~%" (nth 1 l) (nth 2 l)))
-      ((out) (format nil "out ~A ~A;~%" (nth 1 l) (nth 2 l)))
-      ((in-location) (format nil "layout(location = ~D) in ~A ~A;~%" (nth 1 l) (nth 2 l) (nth 3 l)))
-      ((out-location) (format nil "layout(location = ~D) out ~A ~A;~%" (nth 1 l) (nth 2 l) (nth 3 l)))
-      ((uniform) (format nil "uniform ~A ~A;~%" (nth 1 l) (nth 2 l))))))
+  (let ((symbol (elt l 0)))
+    (case symbol
+      ((version) (format nil "#version ~D~%~%" (elt l 1)))
+      ((in) (format nil "in ~A ~A;~%" (elt l 1) (elt l 2)))
+      ((out) (format nil "out ~A ~A;~%" (elt l 1) (elt l 2)))
+      ((in-location) (format nil "layout(location = ~D) in ~A ~A;~%" (elt l 1) (elt l 2) (elt l 3)))
+      ((out-location) (format nil "layout(location = ~D) out ~A ~A;~%" (elt l 1) (elt l 2) (elt l 3)))
+      ((uniform) (format nil "uniform ~A ~A;~%" (elt l 1) (elt l 2)))
+      (otherwise (make-glsl-operation symbol (rest l))))))
 
 ;;; FIXME: At the moment doesn't take arguments and doesn't return things.
 ;;; FIXME: At the moment only takes in one line.
@@ -73,3 +79,9 @@
        (progn
          (map nil #'gl:delete-shader ,shaders)
          (gl:delete-program ,program)))))
+
+(defun make-glsl-shader (l)
+  (map 'list #'(lambda (x) (cond ((typep x 'list) (make-glsl-line x))
+                                 ((typep x 'string) (format nil "~S" x))
+                                 ((typep x 'number) (format nil "~A" x))))
+       l))
