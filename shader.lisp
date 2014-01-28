@@ -81,7 +81,7 @@
          (gl:delete-program ,program)))))
 
 (defun make-glsl-shader (l)
-  (map 'list #'(lambda (x) (cond ((typep x 'list) (make-glsl-line x))
-                                 ((typep x 'string) (format nil "~S" x))
-                                 ((typep x 'number) (format nil "~A" x))))
-       l))
+  (format nil "~{~A~}" (map 'list #'(lambda (x) (cond ((typep x 'list) (make-glsl-line x))
+                                                      ((typep x 'string) (format nil "~S" x))
+                                                      ((typep x 'number) (format nil "~A" x))))
+                            l)))
