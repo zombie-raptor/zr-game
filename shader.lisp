@@ -12,6 +12,9 @@
     ((listp element) (make-glsl-operator (elt element 0) (rest element)))
     (t element)))
 
+(defun symbol-to-string (symbol)
+  (string-downcase (symbol-name symbol)))
+
 ;; Either something is a C/C++ style operator or it is actually a
 ;; function call. If it is a C/C++ style operator then it's either a
 ;; binary one that can be applied arbitrarily or a unary one that can
@@ -45,7 +48,7 @@
       ((:-) (if (= (length rest-elt) 0)
                (unary-op "-" first-elt)
                (binary-op "-" first-elt rest-elt)))
-      (otherwise (make-glsl-funcall (string-downcase (symbol-name symbol)) first-elt rest-elt)))))
+      (otherwise (make-glsl-funcall (symbol-to-string symbol) first-elt rest-elt)))))
 
 ;;; FIXME: At the moment doesn't take arguments and doesn't return things.
 (defun make-glsl-function (name body)
@@ -58,7 +61,12 @@
 ;;;
 ;;; See https://www.opengl.org/wiki/Type_Qualifier_%28GLSL%29#Storage_qualifiers
 (defun make-glsl-var (name type &key storage location)
-  (format nil "~@[layout(location = ~D) ~]~@[~A ~]~A ~A;~%" location storage type name))
+  (format nil
+          "~@[layout(location = ~D) ~]~@[~A ~]~A ~A;~%"
+          location
+          (if storage (symbol-to-string storage) nil)
+          (symbol-to-string type)
+          name))
 
 ;;; The s-expressions are a one-line-operation, a function, or an
 ;;; in-line operation or function call.
