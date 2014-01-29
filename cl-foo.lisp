@@ -7,7 +7,8 @@
 
 (in-package #:cl-foo)
 
-(defparameter *test-shaders*
+;;; FIXME: Implement function calls too.
+(defparameter *shaders*
   (list (make-glsl-shader '((:in-location 0 "vec3" "position")
                             (:uniform "mat4" "projection_matrix")
                             (:uniform "mat4" "view_matrix")
@@ -86,7 +87,7 @@
         (sdl2:hide-cursor)
         (gl:enable :depth-test)
         (with-buffers (buffers :count 2)
-          (with-shaders (shaders program :shader-list *test-shaders* :shader-type-list '(:vertex-shader :fragment-shader))
+          (with-shaders (shaders program :shader-list *shaders* :shader-type-list '(:vertex-shader :fragment-shader))
             (gl:use-program program)
             (gl:uniform-matrix (gl:get-uniform-location program "projection_matrix") 4
                                (vector (perspective-matrix 45.0 (/ width height) 0.1 100.0)))

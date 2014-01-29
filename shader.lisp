@@ -30,12 +30,14 @@
 (defun make-glsl-operation (symbol l)
   (let ((first-elt (glsl-element (first l)))
         (rest-elt (mapcar #'glsl-element (rest l))))
-    (ecase symbol
+    (case symbol
       ((:+ :* :/ :> :< :>= :<= :and :or) (make-glsl-binary-operation symbol first-elt rest-elt))
       ((:not) (make-glsl-unary-operation symbol first-elt))
       ((:-) (if (= (length rest-elt) 0)
                (make-glsl-unary-operation symbol first-elt)
-               (make-glsl-binary-operation symbol first-elt rest-elt))))))
+               (make-glsl-binary-operation symbol first-elt rest-elt)))
+      ;; FIXME: Assume everything else is a function call.
+      (otherwise ""))))
 
 (defun make-glsl-line (l)
   (let ((symbol (elt l 0)))
@@ -46,18 +48,13 @@
       ((:in-location) (format nil "layout(location = ~D) in ~A ~A;~%" (elt l 1) (elt l 2) (elt l 3)))
       ((:out-location) (format nil "layout(location = ~D) out ~A ~A;~%" (elt l 1) (elt l 2) (elt l 3)))
       ((:uniform) (format nil "uniform ~A ~A;~%" (elt l 1) (elt l 2)))
-      ((:setf) (format nil "~A = ~A;" (elt l 1) (glsl-element (elt l 2))))
-      ((:main) (make-glsl-function "main" (make-glsl-line (elt l 1))))
+      ((:setf) (format nil "~A = ~A;~%" (elt l 1) (glsl-element (elt l 2))))
+      ((:main) (make-glsl-function "main" (rest l)))
       (otherwise (make-glsl-operation symbol (rest l))))))
 
 ;;; FIXME: At the moment doesn't take arguments and doesn't return things.
-;;; FIXME: At the moment only takes in one line.
-;;; FIXME: At the moment just takes in a GLSL string line, not a list.
-(defun make-glsl-function (name line)
-  (concatenate 'string
-               (format nil "void ~A(void)~%{~%  " name)
-               line
-               (format nil "~%}")))
+(defun make-glsl-function (name body)
+  (format nil "~%void ~A(void)~%{~%  ~{~A~}}" name (mapcar #'make-glsl-line body)))
 
 (defun read-shader (shader-string shader-type)
   (let ((shader (gl:create-shader shader-type)))
