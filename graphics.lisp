@@ -1,6 +1,8 @@
 ;;;; This file contains a variety of functions and macros that help
 ;;;; with the OpenGL graphics.
 
+(in-package #:cl-foo)
+
 (defmacro with-buffers ((buffers &key (count 1)) &body body)
   `(let ((,buffers (gl:gen-buffers ,count)))
      (unwind-protect
@@ -27,36 +29,21 @@
         (setf v (concatenate 'vector v (vector x (+ x 1) (+ x 2) (+ x 2) (+ x 3) x)))))
     v))
 
-;;; FIXME: Can I replace this with an algorithm to generate these
-;;; coordinates on startup and make the cube's geometry more obvious?
-;;; This could then generalize into other geometric shapes perhaps.
-(defun get-cube-points ()
-  #(-1.0 -1.0 1.0
-    1.0 -1.0 1.0
-    1.0 1.0 1.0
-    -1.0 1.0 1.0
-
-    -1.0 1.0 1.0
-    1.0 1.0 1.0
-    1.0 1.0 -1.0
-    -1.0 1.0 -1.0
-
-    1.0 -1.0 -1.0
-    -1.0 -1.0 -1.0
-    -1.0 1.0 -1.0
-    1.0 1.0 -1.0
-
-    -1.0 -1.0 -1.0
-    1.0 -1.0 -1.0
-    1.0 -1.0 1.0
-    -1.0 -1.0 1.0
-
-    -1.0 -1.0 -1.0
-    -1.0 -1.0 1.0
-    -1.0 1.0 1.0
-    -1.0 1.0 -1.0
-
-    1.0 -1.0 1.0
-    1.0 -1.0 -1.0
-    1.0 1.0 -1.0
-    1.0 1.0 1.0))
+;;; Generates 6 faces on a cube from the 8 points on a cube of a given
+;;; size with the origin as the cube's center.
+(defun get-cube-points (size)
+  (let ((point1 (vector (- size) (- size) (+ size)))
+        (point2 (vector (+ size) (- size) (+ size)))
+        (point3 (vector (+ size) (+ size) (+ size)))
+        (point4 (vector (- size) (+ size) (+ size)))
+        (point5 (vector (+ size) (+ size) (- size)))
+        (point6 (vector (- size) (+ size) (- size)))
+        (point7 (vector (+ size) (- size) (- size)))
+        (point8 (vector (- size) (- size) (- size))))
+    (concatenate 'vector
+                 point1 point2 point3 point4    ; front
+                 point4 point3 point5 point6    ; top
+                 point7 point8 point6 point5    ; back
+                 point8 point7 point2 point1    ; bottom
+                 point8 point1 point4 point6    ; left
+                 point2 point7 point5 point3))) ; right

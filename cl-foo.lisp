@@ -36,7 +36,7 @@
                                (vector (perspective-matrix 45.0 (/ width height) 0.1 100.0)))
             (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
                                (vector (look-at-matrix #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
-            (gl-array :array-buffer (elt buffers 0) :float (get-cube-points))
+            (gl-array :array-buffer (elt buffers 0) :float (get-cube-points 1.0))
             (gl-array :element-array-buffer (elt buffers 1) :unsigned-short (get-cube-elements))
             (gl:bind-buffer :array-buffer (elt buffers 0))
             (gl:bind-buffer :element-array-buffer (elt buffers 1))
