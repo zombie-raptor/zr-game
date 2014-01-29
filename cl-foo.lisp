@@ -9,16 +9,16 @@
 
 ;;; FIXME: Implement function calls too.
 (defparameter *shaders*
-  (list (make-glsl-shader '((:in-location 0 "vec3" "position")
-                            (:uniform "mat4" "projection_matrix")
-                            (:uniform "mat4" "view_matrix")
-                            (:uniform "mat4" "translation_matrix")
+  (list (make-glsl-shader '((:defvar "position" "vec3" :storage "in" :location 0)
+                            (:defvar "projection_matrix" "mat4" :storage "uniform")
+                            (:defvar "view_matrix" "mat4" :storage "uniform")
+                            (:defvar "translation_matrix" "mat4" :storage "uniform")
                             (:main
                              (:setf "gl_Position" (:* "projection_matrix"
                                                       "view_matrix"
                                                       "translation_matrix"
                                                       (:vec4 "position" 1.0))))))
-        (make-glsl-shader '((:out "vec4" "out_color")
+        (make-glsl-shader '((:defvar "out_color" "vec4" :storage "out")
                             (:main
                              (:setf "out_color" (:vec4 0.5 0.5 1.0 1.0)))))))
 
