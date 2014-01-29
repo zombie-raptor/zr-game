@@ -47,21 +47,22 @@
 
 ;;; This line is used to define a GLSL variable of a type and name. If
 ;;; a location integer is given then the proper syntax is provided for
-;;; that. If uniform is true, then a proper syntax is given for
-;;; that. If in or out is provided under io, then a proper syntax is
-;;; given for that.
-(defun make-glsl-var (name type &key io location uniform)
-  (format nil "~@[layout(location = ~D) ~]~:[~;uniform ~]~@[~A ~]~A ~A;~%" location uniform io type name))
+;;; that. A storage qualifier is typically given. Usually it is "in", "out", or
+;;; "uniform".
+;;;
+;;; See https://www.opengl.org/wiki/Type_Qualifier_%28GLSL%29#Storage_qualifiers
+(defun make-glsl-var (name type &key storage location)
+  (format nil "~@[layout(location = ~D) ~]~@[~A ~]~A ~A;~%" location storage type name))
 
 (defun make-glsl-line (l)
   (let ((symbol (elt l 0)))
     (case symbol
       ((:version) (format nil "#version ~D~%~%" (elt l 1)))
-      ((:in) (make-glsl-var (elt l 2) (elt l 1) :io "in"))
-      ((:out) (make-glsl-var (elt l 2)  (elt l 1) :io "out"))
-      ((:in-location) (make-glsl-var (elt l 3) (elt l 2) :io "in" :location (elt l 1)))
-      ((:out-location) (make-glsl-var (elt l 3) (elt l 2) :io "out" :location (elt l 1)))
-      ((:uniform) (make-glsl-var (elt l 2) (elt l 1) :uniform t))
+      ((:in) (make-glsl-var (elt l 2) (elt l 1) :storage "in"))
+      ((:out) (make-glsl-var (elt l 2)  (elt l 1) :storage "out"))
+      ((:in-location) (make-glsl-var (elt l 3) (elt l 2) :storage "in" :location (elt l 1)))
+      ((:out-location) (make-glsl-var (elt l 3) (elt l 2) :storage "out" :location (elt l 1)))
+      ((:uniform) (make-glsl-var (elt l 2) (elt l 1) :storage "uniform"))
       ((:setf) (format nil "~A = ~A;~%" (elt l 1) (glsl-element (elt l 2))))
       ((:main) (make-glsl-function "main" (rest l)))
       (otherwise (make-glsl-operation symbol (rest l))))))
