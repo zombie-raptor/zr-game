@@ -7,7 +7,6 @@
 (defun glsl-element (element)
   (cond
     ((listp element) (make-glsl-operation (elt element 0) (rest element)))
-    ((stringp element) (format nil "~S" element))
     (t element)))
 
 (defun make-glsl-binary-operation (symbol first-elt rest-elt)
@@ -41,12 +40,14 @@
 (defun make-glsl-line (l)
   (let ((symbol (elt l 0)))
     (case symbol
-      ((:glsl-version) (format nil "#version ~D~%~%" (elt l 1)))
+      ((:version) (format nil "#version ~D~%~%" (elt l 1)))
       ((:in) (format nil "in ~A ~A;~%" (elt l 1) (elt l 2)))
       ((:out) (format nil "out ~A ~A;~%" (elt l 1) (elt l 2)))
       ((:in-location) (format nil "layout(location = ~D) in ~A ~A;~%" (elt l 1) (elt l 2) (elt l 3)))
       ((:out-location) (format nil "layout(location = ~D) out ~A ~A;~%" (elt l 1) (elt l 2) (elt l 3)))
       ((:uniform) (format nil "uniform ~A ~A;~%" (elt l 1) (elt l 2)))
+      ((:setf) (format nil "~A = ~A;" (elt l 1) (glsl-element (elt l 2))))
+      ((:main) (make-glsl-function "main" (make-glsl-line (elt l 1))))
       (otherwise (make-glsl-operation symbol (rest l))))))
 
 ;;; FIXME: At the moment doesn't take arguments and doesn't return things.
@@ -87,4 +88,4 @@
          (gl:delete-program ,program)))))
 
 (defun make-glsl-shader (l)
-  (format nil "~{~A~}" (mapcar #'make-glsl-line l)))
+  (format nil "~{~A~}" (mapcar #'make-glsl-line (cons '(:version 330) l))))

@@ -8,17 +8,15 @@
 (in-package #:cl-foo)
 
 (defparameter *test-shaders*
-  (list (concatenate 'string
-                     (make-glsl-shader '((:glsl-version 330)
-                                         (:in-location 0 "vec3" "position")
-                                         (:uniform "mat4" "projection_matrix")
-                                         (:uniform "mat4" "view_matrix")
-                                         (:uniform "mat4" "translation_matrix")))
-                     (make-glsl-function "main" "gl_Position = projection_matrix * view_matrix * translation_matrix * vec4(position, 1.0);"))
-        (concatenate 'string
-                     (make-glsl-line '(:glsl-version 330))
-                     (make-glsl-line '(:out "vec4" "out_color"))
-                     (make-glsl-function "main" "out_color = vec4(0.5f, 0.5f, 1.0f, 1.0f);"))))
+  (list (make-glsl-shader '((:in-location 0 "vec3" "position")
+                            (:uniform "mat4" "projection_matrix")
+                            (:uniform "mat4" "view_matrix")
+                            (:uniform "mat4" "translation_matrix")
+                            (:main
+                             (:setf "gl_Position" (:* "projection_matrix" "view_matrix" "translation_matrix" "vec4(position, 1.0)")))))
+        (make-glsl-shader '((:out "vec4" "out_color")
+                            (:main
+                             (:setf "out_color" "vec4(0.5, 0.5, 1.0, 1.0)"))))))
 
 (defmacro with-buffers ((buffers &key (count 1)) &body body)
   `(let ((,buffers (gl:gen-buffers ,count)))
