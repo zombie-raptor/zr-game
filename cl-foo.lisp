@@ -14,10 +14,13 @@
                             (:uniform "mat4" "view_matrix")
                             (:uniform "mat4" "translation_matrix")
                             (:main
-                             (:setf "gl_Position" (:* "projection_matrix" "view_matrix" "translation_matrix" "vec4(position, 1.0)")))))
+                             (:setf "gl_Position" (:* "projection_matrix"
+                                                      "view_matrix"
+                                                      "translation_matrix"
+                                                      (:vec4 "position" 1.0))))))
         (make-glsl-shader '((:out "vec4" "out_color")
                             (:main
-                             (:setf "out_color" "vec4(0.5, 0.5, 1.0, 1.0)"))))))
+                             (:setf "out_color" (:vec4 0.5 0.5 1.0 1.0)))))))
 
 (defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test"))
   (sdl2:with-init (:everything)

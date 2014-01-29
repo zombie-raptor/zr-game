@@ -6,6 +6,7 @@
 
 (defun glsl-element (element)
   (cond
+    ((null element) nil)
     ((listp element) (make-glsl-operation (elt element 0) (rest element)))
     (t element)))
 
@@ -27,6 +28,11 @@
     ((:not) (format nil "!(~A)" first-elt))
     ((:-) (format nil "-(~A)" first-elt))))
 
+(defun make-glsl-funcall (function-name first-elt rest-elt)
+  (if first-elt
+      (format nil "~A(~A~{, ~A~})" function-name first-elt rest-elt)
+      (format nil "~A()" function-name)))
+
 (defun make-glsl-operation (symbol l)
   (let ((first-elt (glsl-element (first l)))
         (rest-elt (mapcar #'glsl-element (rest l))))
@@ -37,7 +43,7 @@
                (make-glsl-unary-operation symbol first-elt)
                (make-glsl-binary-operation symbol first-elt rest-elt)))
       ;; FIXME: Assume everything else is a function call.
-      (otherwise ""))))
+      (otherwise (make-glsl-funcall (string-downcase (symbol-name symbol)) first-elt rest-elt)))))
 
 (defun make-glsl-line (l)
   (let ((symbol (elt l 0)))
