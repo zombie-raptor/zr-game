@@ -15,7 +15,7 @@
            #:get-cube-elements
            #:get-cube-points
            ;; Shaders
-           #:read-shader
+           #:string-to-shader
            #:shader-program
            #:with-shaders
            #:make-glsl-shader))

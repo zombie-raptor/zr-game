@@ -1,49 +1,55 @@
-;;;; This file translates s-expressions to GLSL shader strings so that
-;;;; shaders can be embedded directly within the source code of the
-;;;; file.
+;;;; This file translates s-expressions to GLSL shaders by making a
+;;;; string of GLSL source code. It is incomplete and currently only
+;;;; works with a small subset of GLSL that I have tested in the very
+;;;; simple shaders that are used elsewhere in CL-FOO. It will expand
+;;;; in complexity as the shaders I am using expand in complexity.
 
 (in-package #:cl-foo)
 
 (defun glsl-element (element)
   (cond
     ((null element) nil)
-    ((listp element) (make-glsl-operation (elt element 0) (rest element)))
+    ((listp element) (make-glsl-operator (elt element 0) (rest element)))
     (t element)))
 
-(defun make-glsl-binary-operation (symbol first-elt rest-elt)
-  (ecase symbol
-    ((:+) (format nil "(~A~{ + ~A~})" first-elt rest-elt))
-    ((:-) (format nil "(~A~{ - ~A~})" first-elt rest-elt))
-    ((:*) (format nil "(~A~{ * ~A~})" first-elt rest-elt))
-    ((:/) (format nil "(~A~{ / ~A~})" first-elt rest-elt))
-    ((:>) (format nil "(~A~{ > ~A~})" first-elt rest-elt))
-    ((:<) (format nil "(~A~{ < ~A~})" first-elt rest-elt))
-    ((:>=) (format nil "(~A~{ >= ~A~})" first-elt rest-elt))
-    ((:<=) (format nil "(~A~{ <= ~A~})" first-elt rest-elt))
-    ((:and) (format nil "(~A~{ && ~A~})" first-elt rest-elt))
-    ((:or) (format nil "(~A~{ || ~A~})" first-elt rest-elt))))
+;; Either something is a C/C++ style operator or it is actually a
+;; function call. If it is a C/C++ style operator then it's either a
+;; binary one that can be applied arbitrarily or a unary one that can
+;; only take one argument.
+(defun make-glsl-operator (symbol l)
+  (defun binary-op (symbol-string first-elt rest-elt)
+    (let ((control-string (format nil "(~~A~~{ ~A ~~A~~})" symbol-string)))
+      (format nil control-string first-elt rest-elt)))
 
-(defun make-glsl-unary-operation (symbol first-elt)
-  (ecase symbol
-    ((:not) (format nil "!(~A)" first-elt))
-    ((:-) (format nil "-(~A)" first-elt))))
+  (defun unary-op (symbol-string first-elt)
+    (format nil "~A(~A)" symbol-string first-elt))
 
-(defun make-glsl-funcall (function-name first-elt rest-elt)
-  (if first-elt
-      (format nil "~A(~A~{, ~A~})" function-name first-elt rest-elt)
-      (format nil "~A()" function-name)))
+  (defun make-glsl-funcall (function-name first-elt rest-elt)
+    (if first-elt
+        (format nil "~A(~A~{, ~A~})" function-name first-elt rest-elt)
+        (format nil "~A()" function-name)))
 
-(defun make-glsl-operation (symbol l)
   (let ((first-elt (glsl-element (first l)))
         (rest-elt (mapcar #'glsl-element (rest l))))
     (case symbol
-      ((:+ :* :/ :> :< :>= :<= :and :or) (make-glsl-binary-operation symbol first-elt rest-elt))
-      ((:not) (make-glsl-unary-operation symbol first-elt))
+      ((:+) (binary-op "+" first-elt rest-elt))
+      ((:*) (binary-op "*" first-elt rest-elt))
+      ((:/) (binary-op "/" first-elt rest-elt))
+      ((:>) (binary-op ">" first-elt rest-elt))
+      ((:<) (binary-op "<" first-elt rest-elt))
+      ((:>=) (binary-op ">=" first-elt rest-elt))
+      ((:<=) (binary-op "<=" first-elt rest-elt))
+      ((:and) (binary-op "&&" first-elt rest-elt))
+      ((:or) (binary-op "||" first-elt rest-elt))
+      ((:not) (unary-op "!" first-elt))
       ((:-) (if (= (length rest-elt) 0)
-               (make-glsl-unary-operation symbol first-elt)
-               (make-glsl-binary-operation symbol first-elt rest-elt)))
-      ;; FIXME: Assume everything else is a function call.
+               (unary-op "-" first-elt)
+               (binary-op "-" first-elt rest-elt)))
       (otherwise (make-glsl-funcall (string-downcase (symbol-name symbol)) first-elt rest-elt)))))
+
+;;; FIXME: At the moment doesn't take arguments and doesn't return things.
+(defun make-glsl-function (name body)
+  (format nil "~%void ~A(void)~%{~%  ~{~A~}}" name (mapcar #'make-glsl-line body)))
 
 ;;; This line is used to define a GLSL variable of a type and name. If
 ;;; a location integer is given then the proper syntax is provided for
@@ -54,6 +60,10 @@
 (defun make-glsl-var (name type &key storage location)
   (format nil "~@[layout(location = ~D) ~]~@[~A ~]~A ~A;~%" location storage type name))
 
+;;; The s-expressions are a one-line-operation, a function, or an
+;;; in-line operation or function call.
+;;;
+;;; FIXME: Does this name make sense anymore?
 (defun make-glsl-line (l)
   (let ((symbol (elt l 0)))
     (case symbol
@@ -63,13 +73,15 @@
                                 :location (getf (nthcdr 3 l) :location)))
       ((:setf) (format nil "~A = ~A;~%" (elt l 1) (glsl-element (elt l 2))))
       ((:main) (make-glsl-function "main" (rest l)))
-      (otherwise (make-glsl-operation symbol (rest l))))))
+      (otherwise (make-glsl-operator symbol (rest l))))))
 
-;;; FIXME: At the moment doesn't take arguments and doesn't return things.
-(defun make-glsl-function (name body)
-  (format nil "~%void ~A(void)~%{~%  ~{~A~}}" name (mapcar #'make-glsl-line body)))
+;;; Use this to make a shaders string from a list of lists.
+(defun make-glsl-shader (l)
+  (format nil "~{~A~}" (mapcar #'make-glsl-line (cons '(:version 330) l))))
 
-(defun read-shader (shader-string shader-type)
+;;; Give this shaders read in from a file or generated through
+;;; make-glsl-shader to compile the shader.
+(defun string-to-shader (shader-string shader-type)
   (let ((shader (gl:create-shader shader-type)))
     (gl:shader-source shader shader-string)
     (gl:compile-shader shader)
@@ -89,13 +101,10 @@
 (defmacro with-shaders ((shaders program &key shader-list shader-type-list) &body body)
   ;; FIXME: Assumes that all of the given shaders are used in the same
   ;; program.
-  `(let* ((,shaders (mapcar #'read-shader ,shader-list ,shader-type-list))
+  `(let* ((,shaders (mapcar #'string-to-shader ,shader-list ,shader-type-list))
           (,program (shader-program ,shaders)))
      (unwind-protect
           (progn ,@body)
        (progn
          (map nil #'gl:delete-shader ,shaders)
          (gl:delete-program ,program)))))
-
-(defun make-glsl-shader (l)
-  (format nil "~{~A~}" (mapcar #'make-glsl-line (cons '(:version 330) l))))
