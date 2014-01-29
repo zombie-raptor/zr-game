@@ -4,6 +4,12 @@
 
 (in-package #:cl-foo)
 
+(defun glsl-element (element)
+  (cond
+    ((listp element) (make-glsl-operation (elt element 0) (rest element)))
+    ((stringp element) (format nil "~S" element))
+    (t element)))
+
 (defun make-glsl-binary-operation (symbol first-elt rest-elt)
   (ecase symbol
     ((:+) (format nil "(~A~{ + ~A~})" first-elt rest-elt))
@@ -23,12 +29,12 @@
     ((:-) (format nil "-(~A)" first-elt))))
 
 (defun make-glsl-operation (symbol l)
-  (let ((first-elt (first l))
-        (rest-elt (rest l)))
+  (let ((first-elt (glsl-element (first l)))
+        (rest-elt (mapcar #'glsl-element (rest l))))
     (ecase symbol
       ((:+ :* :/ :> :< :>= :<= :and :or) (make-glsl-binary-operation symbol first-elt rest-elt))
       ((:not) (make-glsl-unary-operation symbol first-elt))
-      ((:-) (if (eq (length rest-elt) 0)
+      ((:-) (if (= (length rest-elt) 0)
                (make-glsl-unary-operation symbol first-elt)
                (make-glsl-binary-operation symbol first-elt rest-elt))))))
 
@@ -81,7 +87,4 @@
          (gl:delete-program ,program)))))
 
 (defun make-glsl-shader (l)
-  (format nil "~{~A~}" (map 'list #'(lambda (x) (cond ((typep x 'list) (make-glsl-line x))
-                                                      ((typep x 'string) (format nil "~S" x))
-                                                      ((typep x 'number) (format nil "~A" x))))
-                            l)))
+  (format nil "~{~A~}" (mapcar #'make-glsl-line l)))
