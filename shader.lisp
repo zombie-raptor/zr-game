@@ -45,15 +45,23 @@
       ;; FIXME: Assume everything else is a function call.
       (otherwise (make-glsl-funcall (string-downcase (symbol-name symbol)) first-elt rest-elt)))))
 
+;;; This line is used to define a GLSL variable of a type and name. If
+;;; a location integer is given then the proper syntax is provided for
+;;; that. If uniform is true, then a proper syntax is given for
+;;; that. If in or out is provided under io, then a proper syntax is
+;;; given for that.
+(defun make-glsl-var (name type &key io location uniform)
+  (format nil "~@[layout(location = ~D) ~]~:[~;uniform ~]~@[~A ~]~A ~A;~%" location uniform io type name))
+
 (defun make-glsl-line (l)
   (let ((symbol (elt l 0)))
     (case symbol
       ((:version) (format nil "#version ~D~%~%" (elt l 1)))
-      ((:in) (format nil "in ~A ~A;~%" (elt l 1) (elt l 2)))
-      ((:out) (format nil "out ~A ~A;~%" (elt l 1) (elt l 2)))
-      ((:in-location) (format nil "layout(location = ~D) in ~A ~A;~%" (elt l 1) (elt l 2) (elt l 3)))
-      ((:out-location) (format nil "layout(location = ~D) out ~A ~A;~%" (elt l 1) (elt l 2) (elt l 3)))
-      ((:uniform) (format nil "uniform ~A ~A;~%" (elt l 1) (elt l 2)))
+      ((:in) (make-glsl-var (elt l 2) (elt l 1) :io "in"))
+      ((:out) (make-glsl-var (elt l 2)  (elt l 1) :io "out"))
+      ((:in-location) (make-glsl-var (elt l 3) (elt l 2) :io "in" :location (elt l 1)))
+      ((:out-location) (make-glsl-var (elt l 3) (elt l 2) :io "out" :location (elt l 1)))
+      ((:uniform) (make-glsl-var (elt l 2) (elt l 1) :uniform t))
       ((:setf) (format nil "~A = ~A;~%" (elt l 1) (glsl-element (elt l 2))))
       ((:main) (make-glsl-function "main" (rest l)))
       (otherwise (make-glsl-operation symbol (rest l))))))
