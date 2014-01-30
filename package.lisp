@@ -15,6 +15,7 @@
            #:get-cube-elements
            #:get-cube-points
            ;; Shaders
+           #:uniform-matrix
            #:string-to-shader
            #:shader-program
            #:with-shaders

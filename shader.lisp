@@ -13,7 +13,7 @@
 (defun glsl-element (element)
   (cond
     ((null element) nil)
-    ((listp element) (make-glsl-operator (elt element 0) (rest element)))
+    ((listp element) (glsl-operator (elt element 0) (rest element)))
     ((symbolp element) (glsl-name element))
     (t element)))
 
@@ -135,3 +135,6 @@
        (progn
          (map nil #'gl:delete-shader ,shaders)
          (gl:delete-program ,program)))))
+
+(defun uniform-matrix (program matrix-name matrix)
+  (gl:uniform-matrix (gl:get-uniform-location program (glsl-name matrix-name)) 4 (vector matrix)))

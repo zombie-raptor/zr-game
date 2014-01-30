@@ -32,10 +32,8 @@
         (with-buffers (buffers :count 2)
           (with-shaders (shaders program :shader-list *shaders* :shader-type-list '(:vertex-shader :fragment-shader))
             (gl:use-program program)
-            (gl:uniform-matrix (gl:get-uniform-location program "projectionMatrix") 4
-                               (vector (perspective-matrix 45.0 (/ width height) 0.1 100.0)))
-            (gl:uniform-matrix (gl:get-uniform-location program "viewMatrix") 4
-                               (vector (look-at-matrix #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
+            (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 100.0))
+            (uniform-matrix program 'view-matrix (look-at-matrix #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0)))
             (gl-array :array-buffer (elt buffers 0) :float (get-cube-points 1.0))
             (gl-array :element-array-buffer (elt buffers 1) :unsigned-short (get-cube-elements))
             (gl:bind-buffer :array-buffer (elt buffers 0))
@@ -48,8 +46,7 @@
             (dotimes (i 4)
               (let ((x (+ -3.0 (* i 2)))
                     (y (+ -3.0 (* i 2))))
-                (gl:uniform-matrix (gl:get-uniform-location program "translationMatrix") 4
-                                   (vector (translation-matrix x y -10.0))))
+                (uniform-matrix program 'translation-matrix (translation-matrix x y -10.0)))
               (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 36))
             (gl:disable-vertex-attrib-array 0)
             (gl:use-program 0)
