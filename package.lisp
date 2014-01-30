@@ -1,7 +1,7 @@
 ;;;; package.lisp
 
 (defpackage #:cl-foo
-  (:use #:cl #:sdl2)
+  (:use #:cl #:sdl2 #:cl-ppcre)
   (:export #:main-loop
            ;; Matrices
            #:perspective-matrix

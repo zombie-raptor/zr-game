@@ -10,10 +10,14 @@
   (cond
     ((null element) nil)
     ((listp element) (make-glsl-operator (elt element 0) (rest element)))
+    ((symbolp element) (glsl-name element))
     (t element)))
 
 (defun symbol-to-string (symbol)
   (string-downcase (symbol-name symbol)))
+
+(defun glsl-name (symbol)
+  (cl-ppcre:regex-replace "^gl" (cffi:translate-camelcase-name symbol) "gl_"))
 
 ;; Either something is a C/C++ style operator or it is actually a
 ;; function call. If it is a C/C++ style operator then it's either a
@@ -52,7 +56,9 @@
 
 ;;; FIXME: At the moment doesn't take arguments and doesn't return things.
 (defun make-glsl-function (name body)
-  (format nil "~%void ~A(void)~%{~%  ~{~A~}}" name (mapcar #'make-glsl-line body)))
+  (format nil "~%void ~A(void)~%{~%  ~{~A~}}"
+          (glsl-name name)
+          (mapcar #'make-glsl-line body)))
 
 ;;; This line is used to define a GLSL variable of a type and name. If
 ;;; a location integer is given then the proper syntax is provided for
@@ -66,7 +72,7 @@
           location
           (if storage (symbol-to-string storage) nil)
           (symbol-to-string type)
-          name))
+          (glsl-name name)))
 
 ;;; The s-expressions are a one-line-operation, a function, or an
 ;;; in-line operation or function call.
@@ -79,8 +85,8 @@
       ((:defvar) (make-glsl-var (elt l 1) (elt l 2)
                                 :storage (getf (nthcdr 3 l) :storage)
                                 :location (getf (nthcdr 3 l) :location)))
-      ((:setf) (format nil "~A = ~A;~%" (elt l 1) (glsl-element (elt l 2))))
-      ((:main) (make-glsl-function "main" (rest l)))
+      ((:setf) (format nil "~A = ~A;~%" (glsl-name (elt l 1)) (glsl-element (elt l 2))))
+      ((:main) (make-glsl-function 'main (rest l)))
       (otherwise (make-glsl-operator symbol (rest l))))))
 
 ;;; Use this to make a shaders string from a list of lists.

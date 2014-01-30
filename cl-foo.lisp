@@ -9,18 +9,18 @@
 
 ;;; FIXME: Implement function calls too.
 (defparameter *shaders*
-  (list (make-glsl-shader '((:defvar "position" vec3 :storage in :location 0)
-                            (:defvar "projection_matrix" mat4 :storage uniform)
-                            (:defvar "view_matrix" mat4 :storage uniform)
-                            (:defvar "translation_matrix" mat4 :storage uniform)
+  (list (make-glsl-shader '((:defvar position vec3 :storage in :location 0)
+                            (:defvar projection-matrix mat4 :storage uniform)
+                            (:defvar view-matrix mat4 :storage uniform)
+                            (:defvar translation-matrix mat4 :storage uniform)
                             (:main
-                             (:setf "gl_Position" (:* "projection_matrix"
-                                                      "view_matrix"
-                                                      "translation_matrix"
-                                                      (:vec4 "position" 1.0))))))
-        (make-glsl-shader '((:defvar "out_color" vec4 :storage out)
+                             (:setf gl-position (:* projection-matrix
+                                                    view-matrix
+                                                    translation-matrix
+                                                    (:vec4 position 1.0))))))
+        (make-glsl-shader '((:defvar out-color vec4 :storage out)
                             (:main
-                             (:setf "out_color" (:vec4 0.5 0.5 1.0 1.0)))))))
+                             (:setf out-color (:vec4 0.5 0.5 1.0 1.0)))))))
 
 (defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test"))
   (sdl2:with-init (:everything)
@@ -32,9 +32,9 @@
         (with-buffers (buffers :count 2)
           (with-shaders (shaders program :shader-list *shaders* :shader-type-list '(:vertex-shader :fragment-shader))
             (gl:use-program program)
-            (gl:uniform-matrix (gl:get-uniform-location program "projection_matrix") 4
+            (gl:uniform-matrix (gl:get-uniform-location program "projectionMatrix") 4
                                (vector (perspective-matrix 45.0 (/ width height) 0.1 100.0)))
-            (gl:uniform-matrix (gl:get-uniform-location program "view_matrix") 4
+            (gl:uniform-matrix (gl:get-uniform-location program "viewMatrix") 4
                                (vector (look-at-matrix #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0))))
             (gl-array :array-buffer (elt buffers 0) :float (get-cube-points 1.0))
             (gl-array :element-array-buffer (elt buffers 1) :unsigned-short (get-cube-elements))
@@ -48,7 +48,7 @@
             (dotimes (i 4)
               (let ((x (+ -3.0 (* i 2)))
                     (y (+ -3.0 (* i 2))))
-                (gl:uniform-matrix (gl:get-uniform-location program "translation_matrix") 4
+                (gl:uniform-matrix (gl:get-uniform-location program "translationMatrix") 4
                                    (vector (translation-matrix x y -10.0))))
               (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 36))
             (gl:disable-vertex-attrib-array 0)
