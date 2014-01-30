@@ -11,6 +11,8 @@
            #:uniform-scale-matrix
            ;; Graphics
            #:with-buffers
+           #:with-sdl2
+           #:with-vertex-attrib-array
            #:gl-array
            #:get-cube-elements
            #:get-cube-points

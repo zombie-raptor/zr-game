@@ -47,3 +47,24 @@
                  point8 point7 point2 point1    ; bottom
                  point8 point1 point4 point6    ; left
                  point2 point7 point5 point3))) ; right
+
+(defmacro with-sdl2 ((window &key (title "CL-FOO") (width 1280) (height 720)) &body body)
+  `(sdl2:with-init (:everything)
+     (sdl2:with-window (,window :title ,title :w ,width :h ,height :flags '(:shown :opengl))
+       (sdl2:with-gl-context (gl-context ,window)
+         (sdl2:gl-make-current ,window gl-context)
+         (sdl2:hide-cursor)
+         (gl:enable :depth-test)
+         ,@body))))
+
+(defmacro with-vertex-attrib-array ((array-buffer element-array-buffer index size type) &body body)
+  `(unwind-protect
+        (progn (gl:bind-buffer :array-buffer ,array-buffer)
+               (gl:bind-buffer :element-array-buffer ,element-array-buffer)
+               (gl:enable-vertex-attrib-array ,index)
+               (gl:vertex-attrib-pointer ,index ,size ,type nil 0 0)
+               (gl:bind-vertex-array 0)
+                ,@body)
+     (progn (gl:disable-vertex-attrib-array ,index)
+            (gl:bind-buffer :array-buffer 0)
+            (gl:bind-buffer :element-array-buffer 0))))
