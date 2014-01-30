@@ -13,13 +13,13 @@
                             (:defvar projection-matrix mat4 :storage uniform)
                             (:defvar view-matrix mat4 :storage uniform)
                             (:defvar translation-matrix mat4 :storage uniform)
-                            (:main
+                            (:defun main void ()
                              (:setf gl-position (:* projection-matrix
                                                     view-matrix
                                                     translation-matrix
                                                     (:vec4 position 1.0))))))
         (make-glsl-shader '((:defvar out-color vec4 :storage out)
-                            (:main
+                            (:defun main void ()
                              (:setf out-color (:vec4 0.5 0.5 1.0 1.0)))))))
 
 (defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test"))
