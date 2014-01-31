@@ -21,46 +21,78 @@
                             (:defun main void ()
                              (:setf out-color (:vec4 0.5 0.5 1.0 1.0)))))))
 
+(defclass camera ()
+  ((camera-eye
+    :initarg :camera-eye
+    :accessor camera-eye
+    :initform (list 0.0 0.0 1.0))
+   (camera-direction
+    :initarg :camera-direction
+    :accessor camera-direction
+    :initform (list 0.0 0.0 0.0))
+   (camera-up
+    :initarg :camera-up
+    :accessor camera-up
+    :initform (list 0.0 1.0 0.0))))
+
 (defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test"))
   (with-sdl2 (window :title title :width width :height height)
     (with-buffers (buffers :count 2)
       (with-shaders (shaders program :shader-list *shaders* :shader-type-list '(:vertex-shader :fragment-shader))
         (gl:use-program program)
         (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 100.0))
-        (uniform-matrix program 'view-matrix (look-at-matrix #(0.0 0.0 1.0) #(0.0 0.0 0.0) #(0.0 1.0 0.0)))
         (gl-array :array-buffer (elt buffers 0) :float (get-cube-points 1.0))
         (gl-array :element-array-buffer (elt buffers 1) :unsigned-short (get-cube-elements))
-        (with-vertex-attrib-array ((elt buffers 0) (elt buffers 1) 0 3 :float)
-          (gl:bind-vertex-array 0)
-          (gl:clear-color 0 0 0 1)
-          (gl:clear :color-buffer :depth-buffer)
-          (dotimes (i 4)
-            (let ((x (+ -3.0 (* i 2)))
-                  (y (+ -3.0 (* i 2))))
-              (uniform-matrix program 'translation-matrix (translation-matrix x y -10.0)))
-            (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 36)))
-        (gl:use-program 0)
-        (gl:flush)
-        (sdl2:gl-swap-window window)
+        (gl:clear-color 0 0 0 1)
+        (let ((camera-test (make-instance 'camera)))
+          (sdl2:with-event-loop (:method :poll)
+            (:keydown
+             (:keysym keysym)
+             (let ((scancode (sdl2:scancode-value keysym)))
+               (if (sdl2:scancode= scancode :scancode-w) (incf (elt (camera-direction camera-test) 1) -0.01))
+               (if (sdl2:scancode= scancode :scancode-s) (incf (elt (camera-direction camera-test) 1) 0.01))
+               (if (sdl2:scancode= scancode :scancode-a) (incf (elt (camera-direction camera-test) 0) -0.01))
+               (if (sdl2:scancode= scancode :scancode-d) (incf (elt (camera-direction camera-test) 0) 0.01))
+               (if (sdl2:scancode= scancode :scancode-q) (incf (elt (camera-direction camera-test) 2) -0.01))
+               (if (sdl2:scancode= scancode :scancode-e) (incf (elt (camera-direction camera-test) 2) 0.01))
+               (if (sdl2:scancode= scancode :scancode-t) (incf (elt (camera-eye camera-test) 1) -0.01))
+               (if (sdl2:scancode= scancode :scancode-g) (incf (elt (camera-eye camera-test) 1) 0.01))
+               (if (sdl2:scancode= scancode :scancode-f) (incf (elt (camera-eye camera-test) 0) -0.01))
+               (if (sdl2:scancode= scancode :scancode-h) (incf (elt (camera-eye camera-test) 0) 0.01))
+               (if (sdl2:scancode= scancode :scancode-r) (incf (elt (camera-eye camera-test) 2) -0.01))
+               (if (sdl2:scancode= scancode :scancode-y) (incf (elt (camera-eye camera-test) 2) 0.01))
+               ))
 
-        (sdl2:with-event-loop (:method :poll)
-          ;; FIXME: Currently does nothing. It's kept here as a
-          ;; reminder of the syntax.
-          (:keydown
-           (:keysym keysym)
-           (let ((scancode (sdl2:scancode-value keysym)))
-             (cond
-               ((sdl2:scancode= scancode :scancode-w) "W")
-               ((sdl2:scancode= scancode :scancode-s) "S")
-               ((sdl2:scancode= scancode :scancode-a) "A")
-               ((sdl2:scancode= scancode :scancode-d) "D"))))
+            (:keyup
+             (:keysym keysym)
+             (let ((scancode (sdl2:scancode-value keysym)))
+               (when (sdl2:scancode= scancode :scancode-escape)
+                 (sdl2:push-event :quit))))
 
-          (:keyup
-           (:keysym keysym)
-           (let ((scancode (sdl2:scancode-value keysym)))
-             (when (sdl2:scancode= scancode :scancode-escape)
-               (sdl2:push-event :quit))))
+            (:mousemotion
+             (:xrel xrel :yrel yrel)
+;             (setf (camera-eye camera-test) (vector (- (elt (camera-eye camera-test) 0) (/ xrel width 1/32)) (- (elt (camera-eye camera-test) 1) (/ yrel height 0.5)) 1.0)))
+             t)
 
-          (:idle ())
+            (:idle
+             ()
+             (sleep 1/30)
+             (with-vertex-attrib-array (program (elt buffers 0) (elt buffers 1) 0 3 :float)
+               (gl:clear :color-buffer :depth-buffer)
+               ;; FIXME: This is not working as intended. Did I
+               ;; implement look-at-matrix correctly? Am I using it
+               ;; properly?
+               (uniform-matrix program 'view-matrix (look-at-matrix (camera-eye camera-test)
+                                                                    (camera-direction camera-test)
+                                                                    #(0.0 1.0 0.0)))
+               (dotimes (i 4)
+                 (let ((x (+ -3.0 (* i 2)))
+                       (y (+ -3.0 (* i 2)))
+                       (z -10))
+                       ;; (z (- (+ (random 10) 10))))
+                   (uniform-matrix program 'translation-matrix (translation-matrix x y z)))
+                 (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 36)))
+             (gl:flush)
+             (sdl2:gl-swap-window window))
 
-          (:quit () t))))))
+            (:quit () t)))))))

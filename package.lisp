@@ -10,6 +10,7 @@
            #:scale-matrix
            #:uniform-scale-matrix
            ;; Graphics
+           #:camera
            #:with-buffers
            #:with-sdl2
            #:with-vertex-attrib-array

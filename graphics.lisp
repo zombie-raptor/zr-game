@@ -18,7 +18,7 @@
     (gl:buffer-data buffer-type :static-draw array)
     (gl:free-gl-array array)
     (gl:bind-buffer buffer-type 0)
-    t))
+    buffer))
 
 ;;; Each of the 6 faces in a cube is a pair of two triangles who share
 ;;; the beginning and end points. Each loop here is a face.
@@ -57,9 +57,10 @@
          (gl:enable :depth-test)
          ,@body))))
 
-(defmacro with-vertex-attrib-array ((array-buffer element-array-buffer index size type) &body body)
+(defmacro with-vertex-attrib-array ((program array-buffer element-array-buffer index size type) &body body)
   `(unwind-protect
-        (progn (gl:bind-buffer :array-buffer ,array-buffer)
+        (progn (gl:use-program ,program)
+               (gl:bind-buffer :array-buffer ,array-buffer)
                (gl:bind-buffer :element-array-buffer ,element-array-buffer)
                (gl:enable-vertex-attrib-array ,index)
                (gl:vertex-attrib-pointer ,index ,size ,type nil 0 0)
@@ -67,4 +68,5 @@
                 ,@body)
      (progn (gl:disable-vertex-attrib-array ,index)
             (gl:bind-buffer :array-buffer 0)
-            (gl:bind-buffer :element-array-buffer 0))))
+            (gl:bind-buffer :element-array-buffer 0)
+            (gl:use-program 0))))
