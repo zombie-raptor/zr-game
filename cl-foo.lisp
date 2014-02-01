@@ -10,12 +10,10 @@
 (defparameter *shaders*
   (list (make-glsl-shader '((:defvar position vec3 :storage in :location 0)
                             (:defvar offset vec3 :storage uniform)
-                            (:defvar translation-matrix mat4 :storage uniform)
                             (:defvar view-matrix mat4 :storage uniform)
                             (:defvar projection-matrix mat4 :storage uniform)
                             (:defun main void ()
                              (:setf gl-position (:* projection-matrix
-                                                    translation-matrix
                                                     view-matrix
                                                     (:vec4 (:+ position offset) 1.0))))))
         (make-glsl-shader '((:defvar out-color vec4 :storage out)
@@ -68,9 +66,6 @@
                (uniform-matrix program 'view-matrix (look-at-matrix (camera-eye camera-test)
                                                                     (camera-direction camera-test)
                                                                     (camera-up camera-test)))
-               (uniform-matrix program 'translation-matrix (translation-matrix (- (elt (camera-eye camera-test) 0))
-                                                                               (- (elt (camera-eye camera-test) 1))
-                                                                               (- (elt (camera-eye camera-test) 2))))
                (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 36))
              (gl:flush)
              (sdl2:gl-swap-window window))

@@ -42,11 +42,13 @@
 (defun look-at-matrix (eye target up)
   (let* ((z (normalize (map 'vector #'- target eye)))
          (x (cross-product z (normalize up)))
-         (y (cross-product (normalize x) z)))
-    (vector (elt x 0) (elt x 1) (elt x 2) 0
-            (elt y 0) (elt y 1) (elt y 2) 0
-            (- (elt z 0)) (- (elt z 1)) (- (elt z 2)) 0
-            0.0 0.0 0.0 1.0)))
+         (y (cross-product (normalize x) z))
+         (m1 (vector (elt x 0) (elt x 1) (elt x 2) 0
+                     (elt y 0) (elt y 1) (elt y 2) 0
+                     (- (elt z 0)) (- (elt z 1)) (- (elt z 2)) 0
+                     0.0 0.0 0.0 1.0))
+         (m2 (translation-matrix (- (elt eye 0)) (- (elt eye 1)) (- (elt eye 2)))))
+    (matrix-product m2 m1)))
 
 (defun translation-matrix (x y z)
   (vector 1.0 0.0 0.0 x
@@ -68,28 +70,29 @@
 
 ;;; MATRIX OPERATIONS
 
-;;; fixme: After this point matrices are represented with two
-;;; dimensions, as vectors of vectors, with each vector being a
-;;; row. Currently, the program expects a one-dimensional vector. The
-;;; functions above only return one-dimensional vectors for matrices.
-
-;;; Turns rows into columns.
-;;; fixme: make work on arbitrary dimensions
-(defun transpose-matrix (m)
-  (vector (map 'vector #'(lambda (row) (elt row 0)) m)
-          (map 'vector #'(lambda (row) (elt row 1)) m)
-          (map 'vector #'(lambda (row) (elt row 2)) m)
-          (map 'vector #'(lambda (row) (elt row 3)) m)))
-
 (defun matrix-product (a b)
-  ;; Transposes B so columns in B act like rows.
-  (let ((b-prime (transpose-matrix b)))
-    ;; Computes for every row of A.
-    (map 'vector
-         #'(lambda (a-row)
-             ;; Takes the dot product with every column of B.
-             (map 'vector
-                  #'(lambda (b-column)
-                      (dot-product a-row b-column))
-                  b-prime))
-         a)))
+  (let ((row-a-0 (vector (elt a 0) (elt a 1) (elt a 2) (elt a 3)))
+        (row-a-1 (vector (elt a 4) (elt a 5) (elt a 6) (elt a 7)))
+        (row-a-2 (vector (elt a 8) (elt a 9) (elt a 10) (elt a 11)))
+        (row-a-3 (vector (elt a 12) (elt a 13) (elt a 14) (elt a 15)))
+        (col-b-0 (vector (elt b 0) (elt b 4) (elt b 8) (elt b 12)))
+        (col-b-1 (vector (elt b 1) (elt b 5) (elt b 9) (elt b 13)))
+        (col-b-2 (vector (elt b 2) (elt b 6) (elt b 10) (elt b 14)))
+        (col-b-3 (vector (elt b 3) (elt b 7) (elt b 11) (elt b 15))))
+    (vector
+     (dot-product row-a-0 col-b-0)
+     (dot-product row-a-0 col-b-1)
+     (dot-product row-a-0 col-b-2)
+     (dot-product row-a-0 col-b-3)
+     (dot-product row-a-1 col-b-0)
+     (dot-product row-a-1 col-b-1)
+     (dot-product row-a-1 col-b-2)
+     (dot-product row-a-1 col-b-3)
+     (dot-product row-a-2 col-b-0)
+     (dot-product row-a-2 col-b-1)
+     (dot-product row-a-2 col-b-2)
+     (dot-product row-a-2 col-b-3)
+     (dot-product row-a-3 col-b-0)
+     (dot-product row-a-3 col-b-1)
+     (dot-product row-a-3 col-b-2)
+     (dot-product row-a-3 col-b-3))))
