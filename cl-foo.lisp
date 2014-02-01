@@ -9,31 +9,18 @@
 
 (defparameter *shaders*
   (list (make-glsl-shader '((:defvar position vec3 :storage in :location 0)
-                            (:defvar projection-matrix mat4 :storage uniform)
-                            (:defvar view-matrix mat4 :storage uniform)
+                            (:defvar offset vec3 :storage uniform)
                             (:defvar translation-matrix mat4 :storage uniform)
+                            (:defvar view-matrix mat4 :storage uniform)
+                            (:defvar projection-matrix mat4 :storage uniform)
                             (:defun main void ()
                              (:setf gl-position (:* projection-matrix
-                                                    view-matrix
                                                     translation-matrix
-                                                    (:vec4 position 1.0))))))
+                                                    view-matrix
+                                                    (:vec4 (:+ position offset) 1.0))))))
         (make-glsl-shader '((:defvar out-color vec4 :storage out)
                             (:defun main void ()
                              (:setf out-color (:vec4 0.5 0.5 1.0 1.0)))))))
-
-(defclass camera ()
-  ((camera-eye
-    :initarg :camera-eye
-    :accessor camera-eye
-    :initform (list 0.0 0.0 1.0))
-   (camera-direction
-    :initarg :camera-direction
-    :accessor camera-direction
-    :initform (list 0.0 0.0 0.0))
-   (camera-up
-    :initarg :camera-up
-    :accessor camera-up
-    :initform (list 0.0 1.0 0.0))))
 
 (defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test"))
   (with-sdl2 (window :title title :width width :height height)
@@ -60,8 +47,7 @@
                (if (sdl2:scancode= scancode :scancode-f) (incf (elt (camera-eye camera-test) 0) -0.01))
                (if (sdl2:scancode= scancode :scancode-h) (incf (elt (camera-eye camera-test) 0) 0.01))
                (if (sdl2:scancode= scancode :scancode-r) (incf (elt (camera-eye camera-test) 2) -0.01))
-               (if (sdl2:scancode= scancode :scancode-y) (incf (elt (camera-eye camera-test) 2) 0.01))
-               ))
+               (if (sdl2:scancode= scancode :scancode-y) (incf (elt (camera-eye camera-test) 2) 0.01))))
 
             (:keyup
              (:keysym keysym)
@@ -69,29 +55,23 @@
                (when (sdl2:scancode= scancode :scancode-escape)
                  (sdl2:push-event :quit))))
 
-            (:mousemotion
-             (:xrel xrel :yrel yrel)
-;             (setf (camera-eye camera-test) (vector (- (elt (camera-eye camera-test) 0) (/ xrel width 1/32)) (- (elt (camera-eye camera-test) 1) (/ yrel height 0.5)) 1.0)))
-             t)
+            ;; (:mousemotion
+            ;;  (:xrel xrel :yrel yrel)
+            ;;  (setf (camera-eye camera-test) (vector (- (elt (camera-eye camera-test) 0) (/ xrel width 1/32)) (- (elt (camera-eye camera-test) 1) (/ yrel height 0.5)) 1.0)))
 
             (:idle
              ()
              (sleep 1/30)
              (with-vertex-attrib-array (program (elt buffers 0) (elt buffers 1) 0 3 :float)
                (gl:clear :color-buffer :depth-buffer)
-               ;; FIXME: This is not working as intended. Did I
-               ;; implement look-at-matrix correctly? Am I using it
-               ;; properly?
+               (uniform-vector program 'offset #(1.0 -2.0 -10.0))
                (uniform-matrix program 'view-matrix (look-at-matrix (camera-eye camera-test)
                                                                     (camera-direction camera-test)
-                                                                    #(0.0 1.0 0.0)))
-               (dotimes (i 4)
-                 (let ((x (+ -3.0 (* i 2)))
-                       (y (+ -3.0 (* i 2)))
-                       (z -10))
-                       ;; (z (- (+ (random 10) 10))))
-                   (uniform-matrix program 'translation-matrix (translation-matrix x y z)))
-                 (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 36)))
+                                                                    (camera-up camera-test)))
+               (uniform-matrix program 'translation-matrix (translation-matrix (- (elt (camera-eye camera-test) 0))
+                                                                               (- (elt (camera-eye camera-test) 1))
+                                                                               (- (elt (camera-eye camera-test) 2))))
+               (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count 36))
              (gl:flush)
              (sdl2:gl-swap-window window))
 

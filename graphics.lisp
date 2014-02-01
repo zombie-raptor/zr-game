@@ -70,3 +70,17 @@
             (gl:bind-buffer :array-buffer 0)
             (gl:bind-buffer :element-array-buffer 0)
             (gl:use-program 0))))
+
+(defclass camera ()
+  ((camera-eye
+    :initarg :camera-eye
+    :accessor camera-eye
+    :initform (list 0.0 0.0 1.0))
+   (camera-direction
+    :initarg :camera-direction
+    :accessor camera-direction
+    :initform (list 0.0 0.0 0.0))
+   (camera-up
+    :initarg :camera-up
+    :accessor camera-up
+    :initform (list 0.0 1.0 0.0))))

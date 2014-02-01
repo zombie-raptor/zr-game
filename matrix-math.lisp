@@ -39,13 +39,13 @@
 
 ;;; Implementation of the gluLookAt matrix.
 ;;; https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
-(defun look-at-matrix (eye center up)
-  (let* ((f (normalize (map 'vector #'- center eye)))
-         (s (cross-product f (normalize up)))
-         (u (cross-product (normalize s) f)))
-    (vector (elt s 0) (elt s 1) (elt s 2) 0.0
-            (elt u 0) (elt u 1) (elt u 2) 0.0
-            (- (elt f 0)) (- (elt f 1)) (- (elt f 2)) 0.0
+(defun look-at-matrix (eye target up)
+  (let* ((z (normalize (map 'vector #'- target eye)))
+         (x (cross-product z (normalize up)))
+         (y (cross-product (normalize x) z)))
+    (vector (elt x 0) (elt x 1) (elt x 2) 0
+            (elt y 0) (elt y 1) (elt y 2) 0
+            (- (elt z 0)) (- (elt z 1)) (- (elt z 2)) 0
             0.0 0.0 0.0 1.0)))
 
 (defun translation-matrix (x y z)

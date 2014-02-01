@@ -138,3 +138,6 @@
 
 (defun uniform-matrix (program matrix-name matrix)
   (gl:uniform-matrix (gl:get-uniform-location program (glsl-name matrix-name)) 4 (vector matrix)))
+
+(defun uniform-vector (program vector-name vector)
+  (gl:uniformfv (gl:get-uniform-location program (glsl-name vector-name)) vector))
