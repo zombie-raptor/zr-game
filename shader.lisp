@@ -31,31 +31,6 @@
 (defun unary-op (symbol-string first-elt)
   (format nil "~A(~A)" symbol-string first-elt))
 
-;;; Either something is a C/C++ style operator or it is actually a
-;;; function call. If it is a C/C++ style operator then it's either a
-;;; binary one that can be applied arbitrarily or a unary one that can
-;;; only take one argument.
-(defun glsl-operator (symbol l)
-  (let ((first-elt (glsl-element (first l)))
-        (rest-elt (mapcar #'glsl-element (rest l))))
-    (case symbol
-      ((:+) (binary-op "+" first-elt rest-elt))
-      ((:*) (binary-op "*" first-elt rest-elt))
-      ((:/) (binary-op "/" first-elt rest-elt))
-      ((:>) (binary-op ">" first-elt rest-elt))
-      ((:<) (binary-op "<" first-elt rest-elt))
-      ((:>=) (binary-op ">=" first-elt rest-elt))
-      ((:<=) (binary-op "<=" first-elt rest-elt))
-      ((:and) (binary-op "&&" first-elt rest-elt))
-      ((:or) (binary-op "||" first-elt rest-elt))
-      ((:not) (unary-op "!" first-elt))
-      ((:-) (if (= (length rest-elt) 0)
-                (unary-op "-" first-elt)
-                (binary-op "-" first-elt rest-elt)))
-      ;; Call function SYMBOL with optional first parameter and
-      ;; optional later parameters.
-      (otherwise (format nil "~A(~@[~A~]~{, ~A~})" (glsl-name symbol) first-elt rest-elt)))))
-
 ;;; Takes in a name, a type, a list of arguments, and a body and
 ;;; returns a string representation of a GLSL function. The argument
 ;;; list can be blank or can be arbitrarily long.
@@ -86,6 +61,31 @@
           (if storage (glsl-name storage) nil)
           (glsl-name type)
           (glsl-name name)))
+
+;;; Either something is a C/C++ style operator or it is actually a
+;;; function call. If it is a C/C++ style operator then it's either a
+;;; binary one that can be applied arbitrarily or a unary one that can
+;;; only take one argument.
+(defun glsl-operator (symbol l)
+  (let ((first-elt (glsl-element (first l)))
+        (rest-elt (mapcar #'glsl-element (rest l))))
+    (case symbol
+      ((:+) (binary-op "+" first-elt rest-elt))
+      ((:*) (binary-op "*" first-elt rest-elt))
+      ((:/) (binary-op "/" first-elt rest-elt))
+      ((:>) (binary-op ">" first-elt rest-elt))
+      ((:<) (binary-op "<" first-elt rest-elt))
+      ((:>=) (binary-op ">=" first-elt rest-elt))
+      ((:<=) (binary-op "<=" first-elt rest-elt))
+      ((:and) (binary-op "&&" first-elt rest-elt))
+      ((:or) (binary-op "||" first-elt rest-elt))
+      ((:not) (unary-op "!" first-elt))
+      ((:-) (if (= (length rest-elt) 0)
+                (unary-op "-" first-elt)
+                (binary-op "-" first-elt rest-elt)))
+      ;; Call function SYMBOL with optional first parameter and
+      ;; optional later parameters.
+      (otherwise (format nil "~A(~@[~A~]~{, ~A~})" (glsl-name symbol) first-elt rest-elt)))))
 
 ;;; The s-expressions are a one-line-operation, a function, or an
 ;;; in-line operation or function call.
