@@ -3,12 +3,16 @@
 (defpackage #:cl-foo
   (:use #:cl #:sdl2 #:cl-ppcre)
   (:export #:main-loop
-           ;; Matrices
+           ;; Math
+           #:magnitude
+           #:normalize
+           #:cross-product
+           #:dot-product
            #:perspective-matrix
            #:look-at-matrix
            #:translation-matrix
            #:scale-matrix
-           #:uniform-scale-matrix
+           #:matrix-product
            ;; Graphics
            #:camera
            #:with-buffers
@@ -19,6 +23,7 @@
            #:get-cube-points
            ;; Shaders
            #:uniform-matrix
+           #:uniform-vector
            #:string-to-shader
            #:shader-program
            #:with-shaders

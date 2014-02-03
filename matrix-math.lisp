@@ -26,6 +26,9 @@
 (defun dot-product (u v)
   (reduce #'+ (map 'vector #'* u v)))
 
+;;; FIXME: There are probably still mistakes in here. Carefully go
+;;; through this.
+
 ;;; SPECIAL MATRICES
 
 ;;; Implementation of the gluPerspective matrix.
@@ -61,12 +64,6 @@
           0.0 y 0.0 0.0
           0.0 0.0 z 0.0
           0.0 0.0 0.0 1))
-
-(defun uniform-scale-matrix (c)
-  (vector 1 0.0 0.0 0.0
-          0.0 1.0 0.0 0.0
-          0.0 0.0 1.0 0.0
-          0.0 0.0 0.0 (/ c)))
 
 ;;; MATRIX OPERATIONS
 

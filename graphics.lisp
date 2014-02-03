@@ -22,24 +22,24 @@
 
 ;;; Each of the 6 faces in a cube is a pair of two triangles who share
 ;;; the beginning and end points. Each loop here is a face.
-(defun get-cube-elements ()
+(defun get-cube-elements (number-of-cubes)
   (let ((v nil))
-    (dotimes (i 6)
+    (dotimes (i (* number-of-cubes 6))
       (let ((x (* i 4)))
         (setf v (concatenate 'vector v (vector x (+ x 1) (+ x 2) (+ x 2) (+ x 3) x)))))
     v))
 
 ;;; Generates 6 faces on a cube from the 8 points on a cube of a given
 ;;; size with the origin as the cube's center.
-(defun get-cube-points (size)
-  (let ((point1 (vector (- size) (- size) (+ size)))
-        (point2 (vector (+ size) (- size) (+ size)))
-        (point3 (vector (+ size) (+ size) (+ size)))
-        (point4 (vector (- size) (+ size) (+ size)))
-        (point5 (vector (+ size) (+ size) (- size)))
-        (point6 (vector (- size) (+ size) (- size)))
-        (point7 (vector (+ size) (- size) (- size)))
-        (point8 (vector (- size) (- size) (- size))))
+(defun get-cube-points (&key (size 1.0) (offset #(0.0 0.0 0.0)))
+  (let ((point1 (map 'vector #'+ (vector (- size) (- size) (+ size)) offset))
+        (point2 (map 'vector #'+ (vector (+ size) (- size) (+ size)) offset))
+        (point3 (map 'vector #'+ (vector (+ size) (+ size) (+ size)) offset))
+        (point4 (map 'vector #'+ (vector (- size) (+ size) (+ size)) offset))
+        (point5 (map 'vector #'+ (vector (+ size) (+ size) (- size)) offset))
+        (point6 (map 'vector #'+ (vector (- size) (+ size) (- size)) offset))
+        (point7 (map 'vector #'+ (vector (+ size) (- size) (- size)) offset))
+        (point8 (map 'vector #'+ (vector (- size) (- size) (- size)) offset)))
     (concatenate 'vector
                  point1 point2 point3 point4    ; front
                  point4 point3 point5 point6    ; top
@@ -54,7 +54,7 @@
        (sdl2:with-gl-context (gl-context ,window)
          (sdl2:gl-make-current ,window gl-context)
          (sdl2:hide-cursor)
-         (gl:enable :depth-test)
+         (gl:enable :depth-test :cull-face)
          ,@body))))
 
 (defmacro with-vertex-attrib-array ((program array-buffer element-array-buffer index size type) &body body)
