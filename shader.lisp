@@ -8,21 +8,21 @@
 
 (in-package #:cl-foo)
 
-;;;; FIXME: Obviously not exhaustive. How should I represent true,
-;;;; false, and void?
-(defun glsl-element (element)
-  (cond
-    ((null element) nil)
-    ((listp element) (glsl-operator (elt element 0) (rest element)))
-    ((symbolp element) (glsl-name element))
-    (t element)))
-
 ;;; FIXME: This replaces anything that starts with gl with gl_, but it
 ;;; really should replace anything that starts with gl[A-Z] with
 ;;; gl_[A-Z] because otherwise names like "glare" will become
 ;;; "gl_are".
 (defun glsl-name (symbol)
   (cl-ppcre:regex-replace "^gl" (cffi:translate-camelcase-name symbol) "gl_"))
+
+;;;; FIXME: Obviously not exhaustive. How should I represent true,
+;;;; false, and void?
+(defun glsl-element (element)
+  (cond
+    ((null element) nil)
+    ((listp element) (glsl-operator (first element) (rest element)))
+    ((symbolp element) (glsl-name element))
+    (t element)))
 
 (defun binary-op (symbol-string first-elt rest-elt)
   (let ((control-string (format nil "(~~A~~{ ~A ~~A~~})" symbol-string)))
@@ -124,20 +124,3 @@
         (error (concatenate 'string "Error in shader program~%" (gl:get-program-info-log program))))
     (map nil #'(lambda (shader) (gl:detach-shader program shader)) shaders)
     program))
-
-(defmacro with-shaders ((shaders program &key shader-list shader-type-list) &body body)
-  ;; FIXME: Assumes that all of the given shaders are used in the same
-  ;; program.
-  `(let* ((,shaders (mapcar #'string-to-shader ,shader-list ,shader-type-list))
-          (,program (shader-program ,shaders)))
-     (unwind-protect
-          (progn ,@body)
-       (progn
-         (map nil #'gl:delete-shader ,shaders)
-         (gl:delete-program ,program)))))
-
-(defun uniform-matrix (program matrix-name matrix)
-  (gl:uniform-matrix (gl:get-uniform-location program (glsl-name matrix-name)) 4 (vector matrix)))
-
-(defun uniform-vector (program vector-name vector)
-  (gl:uniformfv (gl:get-uniform-location program (glsl-name vector-name)) vector))

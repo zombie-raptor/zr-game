@@ -13,18 +13,18 @@
            #:translation-matrix
            #:scale-matrix
            #:matrix-product
+           #:get-cube-elements
+           #:get-cube-points
            ;; Graphics
            #:camera
            #:with-buffers
            #:with-sdl2
+           #:with-shaders
            #:with-vertex-attrib-array
            #:gl-array
-           #:get-cube-elements
-           #:get-cube-points
-           ;; Shaders
            #:uniform-matrix
            #:uniform-vector
+           ;; Shaders
            #:string-to-shader
            #:shader-program
-           #:with-shaders
            #:make-glsl-shader))

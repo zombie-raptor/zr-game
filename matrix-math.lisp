@@ -2,6 +2,8 @@
 ;;;; computations are done in the Lisp code rather than the
 ;;;; shaders. If these turn out to be very slow, MAP will have to be
 ;;;; replaced with something else.
+;;;;
+;;;; This also provides some geometry, too.
 
 (in-package #:cl-foo)
 
@@ -26,10 +28,10 @@
 (defun dot-product (u v)
   (reduce #'+ (map 'vector #'* u v)))
 
+;;; SPECIAL MATRICES
+;;;
 ;;; FIXME: There are probably still mistakes in here. Carefully go
 ;;; through this.
-
-;;; SPECIAL MATRICES
 
 ;;; Implementation of the gluPerspective matrix.
 ;;; https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
@@ -93,3 +95,34 @@
      (dot-product row-a-3 col-b-1)
      (dot-product row-a-3 col-b-2)
      (dot-product row-a-3 col-b-3))))
+
+;;; GEOMETRY
+
+;;; Each of the 6 faces in a cube is a pair of two triangles who share
+;;; the beginning and end points. Each loop here is a face in a cube,
+;;; and this is repeated for as many cubes as required.
+(defun get-cube-elements (number-of-cubes)
+  (let ((v nil))
+    (dotimes (i (* number-of-cubes 6))
+      (let ((x (* i 4)))
+        (setf v (concatenate 'vector v (vector x (+ x 1) (+ x 2) (+ x 2) (+ x 3) x)))))
+    v))
+
+;;; Generates 6 faces on a cube from the 8 points on a cube of a given
+;;; size with the cube center at OFFSET.
+(defun get-cube-points (&key (size 1.0) (offset #(0.0 0.0 0.0)))
+  (let ((point1 (map 'vector #'+ (vector (- size) (- size) (+ size)) offset))
+        (point2 (map 'vector #'+ (vector (+ size) (- size) (+ size)) offset))
+        (point3 (map 'vector #'+ (vector (+ size) (+ size) (+ size)) offset))
+        (point4 (map 'vector #'+ (vector (- size) (+ size) (+ size)) offset))
+        (point5 (map 'vector #'+ (vector (+ size) (+ size) (- size)) offset))
+        (point6 (map 'vector #'+ (vector (- size) (+ size) (- size)) offset))
+        (point7 (map 'vector #'+ (vector (+ size) (- size) (- size)) offset))
+        (point8 (map 'vector #'+ (vector (- size) (- size) (- size)) offset)))
+    (concatenate 'vector
+                 point1 point2 point3 point4    ; front
+                 point4 point3 point5 point6    ; top
+                 point7 point8 point6 point5    ; back
+                 point8 point7 point2 point1    ; bottom
+                 point8 point1 point4 point6    ; left
+                 point2 point7 point5 point3))) ; right
