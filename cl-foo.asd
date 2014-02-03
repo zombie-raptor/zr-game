@@ -7,7 +7,7 @@
   :license "MIT"
   :depends-on (:sdl2 :cl-ppcre)
   :components ((:file "package")
-               (:file "matrix-math")
+               (:file "math")
                (:file "shader")
                (:file "graphics")
                (:file "cl-foo")))
