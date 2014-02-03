@@ -21,6 +21,7 @@
          (sdl2:gl-make-current ,window gl-context)
          (sdl2:hide-cursor)
          (gl:enable :depth-test :cull-face)
+         (gl:clear-color 0 0 0 1)
          ,@body))))
 
 (defmacro with-buffers ((buffers &key (count 1)) &body body)

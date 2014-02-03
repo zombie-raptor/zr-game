@@ -101,9 +101,9 @@
 ;;; Each of the 6 faces in a cube is a pair of two triangles who share
 ;;; the beginning and end points. Each loop here is a face in a cube,
 ;;; and this is repeated for as many cubes as required.
-(defun get-cube-elements (number-of-cubes)
+(defun get-cube-elements (cube-count)
   (let ((v nil))
-    (dotimes (i (* number-of-cubes 6))
+    (dotimes (i (* cube-count 6))
       (let ((x (* i 4)))
         (setf v (concatenate 'vector v (vector x (+ x 1) (+ x 2) (+ x 2) (+ x 3) x)))))
     v))
@@ -126,3 +126,11 @@
                  point8 point7 point2 point1    ; bottom
                  point8 point1 point4 point6    ; left
                  point2 point7 point5 point3))) ; right
+
+(defun get-cube-group-points (length &key (offset #(0.0 0.0 0.0)))
+  (let ((v nil))
+    (dotimes (i length)
+      (setf v (concatenate 'vector v (get-cube-points :offset (vector (elt offset 0)
+                                                                      (+ (elt offset 1) (* 2 i))
+                                                                      (elt offset 2))))))
+    v))

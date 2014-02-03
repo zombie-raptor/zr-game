@@ -27,16 +27,16 @@
         (let ((camera-test (make-instance 'camera))
               (array-buffer (elt buffers 0))
               (element-array-buffer (elt buffers 1))
-              (cube-points (concatenate 'vector
-                                        (get-cube-points :offset #(0.0 9.0 -10.0))
-                                        (get-cube-points :offset #(0.0 7.0 -10.0))))
-              (cube-elements (get-cube-elements 2)))
+              (cube-points (get-cube-group-points 8 :offset #(0.0 -4.0 -10.0)))
+              (cube-elements (get-cube-elements 8)))
           (gl:use-program program)
           (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 100.0))
           (gl-array :array-buffer array-buffer :float cube-points)
           (gl-array :element-array-buffer element-array-buffer :unsigned-short cube-elements)
-          (gl:clear-color 0 0 0 1)
           (sdl2:with-event-loop (:method :poll)
+            ;; FIXME: This only registers one key press, e.g. only W
+            ;; or A and not W and A, making diagonal movement
+            ;; currently impossible.
             (:keydown
              (:keysym keysym)
              (let ((scancode (sdl2:scancode-value keysym)))
@@ -65,7 +65,7 @@
 
             (:idle
              ()
-             (sleep 1/30)
+             (sleep 1/60)
              (with-vertex-attrib-array (program array-buffer element-array-buffer 0 3 :float)
                (gl:clear :color-buffer :depth-buffer)
                (uniform-vector program 'offset #(1.0 -2.0 -10.0))
