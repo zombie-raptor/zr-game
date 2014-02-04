@@ -4,7 +4,7 @@
 (in-package #:cl-foo)
 
 ;;; Puts a vector into a GL buffer as a GL array.
-(defun gl-array (buffer-type buffer array-type vect)
+(defun make-array-buffer (buffer-type buffer array-type vect)
   (let ((array (gl:alloc-gl-array array-type (length vect))))
     (dotimes (i (length vect))
       (setf (gl:glaref array i) (aref vect i)))
@@ -47,7 +47,7 @@
                ,@body)
      (gl:use-program 0)))
 
-(defmacro with-vertex-attrib-array ((program array-buffer element-array-buffer index size type) &body body)
+(defmacro with-vertex-attrib-array ((program array-buffer element-array-buffer index size count type) &body body)
   `(unwind-protect
         (progn (gl:use-program ,program)
                (gl:bind-buffer :array-buffer ,array-buffer)
@@ -55,7 +55,8 @@
                (gl:enable-vertex-attrib-array ,index)
                (gl:vertex-attrib-pointer ,index ,size ,type nil 0 0)
                (gl:bind-vertex-array 0)
-                ,@body)
+               ,@body
+               (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count ,count))
      (progn (gl:disable-vertex-attrib-array ,index)
             (gl:bind-buffer :array-buffer 0)
             (gl:bind-buffer :element-array-buffer 0)

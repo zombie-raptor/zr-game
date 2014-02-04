@@ -10,4 +10,5 @@
                (:file "math")
                (:file "shader")
                (:file "graphics")
+               (:file "game")
                (:file "cl-foo")))
