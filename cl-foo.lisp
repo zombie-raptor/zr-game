@@ -40,12 +40,15 @@
             (:keydown
              (:keysym keysym)
              (let ((scancode (sdl2:scancode-value keysym)))
+               ;; Experimenting with look-at code for the camera. 0 is x, 1 is y, 2 is z.
+               ;; Moves the direction the camera is pointing?
                (if (sdl2:scancode= scancode :scancode-w) (incf (elt (camera-direction camera-test) 1) -0.01))
                (if (sdl2:scancode= scancode :scancode-s) (incf (elt (camera-direction camera-test) 1) 0.01))
                (if (sdl2:scancode= scancode :scancode-a) (incf (elt (camera-direction camera-test) 0) -0.01))
                (if (sdl2:scancode= scancode :scancode-d) (incf (elt (camera-direction camera-test) 0) 0.01))
-               (if (sdl2:scancode= scancode :scancode-q) (incf (elt (camera-direction camera-test) 2) -0.01))
-               (if (sdl2:scancode= scancode :scancode-e) (incf (elt (camera-direction camera-test) 2) 0.01))
+               (if (sdl2:scancode= scancode :scancode-q) (incf (elt (camera-direction camera-test) 2) -0.01)) ; does nothing, as expected
+               (if (sdl2:scancode= scancode :scancode-e) (incf (elt (camera-direction camera-test) 2) 0.01)) ; does nothing, as expected
+               ;; Moves the location of the camera?
                (if (sdl2:scancode= scancode :scancode-t) (incf (elt (camera-eye camera-test) 1) -0.01))
                (if (sdl2:scancode= scancode :scancode-g) (incf (elt (camera-eye camera-test) 1) 0.01))
                (if (sdl2:scancode= scancode :scancode-f) (incf (elt (camera-eye camera-test) 0) -0.01))
@@ -65,7 +68,6 @@
 
             (:idle
              ()
-             (sleep 1/60)
              (with-vertex-attrib-array (program array-buffer element-array-buffer 0 3 :float)
                (gl:clear :color-buffer :depth-buffer)
                (uniform-vector program 'offset #(1.0 -2.0 -10.0))
