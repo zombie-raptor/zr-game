@@ -80,3 +80,13 @@
     :initarg :camera-up
     :accessor camera-up
     :initform (list 0.0 1.0 0.0))))
+
+(defgeneric move (object magnitude direction))
+
+(defmethod move ((object camera) magnitude direction)
+  (let ((i (case direction
+             ((:x) 0)
+             ((:y) 1)
+             ((:z) 2))))
+  (incf (elt (camera-eye object) i) magnitude)
+  (incf (elt (camera-direction object) i) magnitude)))

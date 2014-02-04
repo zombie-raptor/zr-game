@@ -20,21 +20,13 @@
                             (:defun main void ()
                              (:setf out-color (:vec4 0.5 0.5 1.0 1.0)))))))
 
-;;; Experimenting with look-at code for the camera. 0 is x, 1 is y,
-;;; 2 is z.
 (defun move-camera (camera scancode)
-  ;; Moves the direction the camera is pointing?
-  (if (sdl2:scancode= scancode :scancode-w) (incf (elt (camera-direction camera) 1) -0.01))
-  (if (sdl2:scancode= scancode :scancode-s) (incf (elt (camera-direction camera) 1) 0.01))
-  (if (sdl2:scancode= scancode :scancode-a) (incf (elt (camera-direction camera) 0) -0.01))
-  (if (sdl2:scancode= scancode :scancode-d) (incf (elt (camera-direction camera) 0) 0.01))
-  ;; Moves the location of the camera?
-  (if (sdl2:scancode= scancode :scancode-t) (incf (elt (camera-eye camera) 1) -0.01))
-  (if (sdl2:scancode= scancode :scancode-g) (incf (elt (camera-eye camera) 1) 0.01))
-  (if (sdl2:scancode= scancode :scancode-f) (incf (elt (camera-eye camera) 0) -0.01))
-  (if (sdl2:scancode= scancode :scancode-h) (incf (elt (camera-eye camera) 0) 0.01))
-  (if (sdl2:scancode= scancode :scancode-r) (incf (elt (camera-eye camera) 2) -0.01))
-  (if (sdl2:scancode= scancode :scancode-y) (incf (elt (camera-eye camera) 2) 0.01)))
+  (cond ((sdl2:scancode= scancode :scancode-q) (move camera -0.1 :y))
+        ((sdl2:scancode= scancode :scancode-e) (move camera 0.1 :y))
+        ((sdl2:scancode= scancode :scancode-a) (move camera -0.1 :x))
+        ((sdl2:scancode= scancode :scancode-d) (move camera 0.1 :x))
+        ((sdl2:scancode= scancode :scancode-s) (move camera 0.1 :z))
+        ((sdl2:scancode= scancode :scancode-w) (move camera -0.1 :z))))
 
 (defmacro with-game-loop ((window keydown-actions) &body body)
   `(let ((keydown-scancodes nil))
