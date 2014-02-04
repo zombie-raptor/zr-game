@@ -28,8 +28,6 @@
   (if (sdl2:scancode= scancode :scancode-s) (incf (elt (camera-direction camera) 1) 0.01))
   (if (sdl2:scancode= scancode :scancode-a) (incf (elt (camera-direction camera) 0) -0.01))
   (if (sdl2:scancode= scancode :scancode-d) (incf (elt (camera-direction camera) 0) 0.01))
-  (if (sdl2:scancode= scancode :scancode-q) (incf (elt (camera-direction camera) 2) -0.01)) ; does nothing, as expected
-  (if (sdl2:scancode= scancode :scancode-e) (incf (elt (camera-direction camera) 2) 0.01)) ; does nothing, as expected
   ;; Moves the location of the camera?
   (if (sdl2:scancode= scancode :scancode-t) (incf (elt (camera-eye camera) 1) -0.01))
   (if (sdl2:scancode= scancode :scancode-g) (incf (elt (camera-eye camera) 1) 0.01))
@@ -37,6 +35,32 @@
   (if (sdl2:scancode= scancode :scancode-h) (incf (elt (camera-eye camera) 0) 0.01))
   (if (sdl2:scancode= scancode :scancode-r) (incf (elt (camera-eye camera) 2) -0.01))
   (if (sdl2:scancode= scancode :scancode-y) (incf (elt (camera-eye camera) 2) 0.01)))
+
+(defmacro with-game-loop ((window) &body body)
+  `(let ((keydown-scancodes nil))
+     (sdl2:with-event-loop (:method :poll)
+       (:keydown
+        (:keysym keysym)
+        (let ((scancode (sdl2:scancode-value keysym)))
+          (setf keydown-scancodes (adjoin scancode keydown-scancodes))))
+
+       (:keyup
+        (:keysym keysym)
+        (let ((scancode (sdl2:scancode-value keysym)))
+          (if (member scancode keydown-scancodes)
+              (setf keydown-scancodes (set-difference keydown-scancodes (list scancode))))
+          (when (sdl2:scancode= scancode :scancode-escape)
+            (sdl2:push-event :quit))))
+
+       (:idle
+        ()
+        (progn ,@body)
+        (gl:flush)
+        (sdl2:gl-swap-window ,window))
+
+       (:quit
+        ()
+        t))))
 
 (defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test"))
   (with-sdl2 (window :title title :width width :height height)
@@ -46,41 +70,19 @@
               (array-buffer (elt buffers 0))
               (element-array-buffer (elt buffers 1))
               (cube-points (get-cube-group-points 8 :offset #(0.0 -4.0 -10.0)))
-              (cube-elements (get-cube-elements 8))
-              (scancodes nil))
+              (cube-elements (get-cube-elements 8)))
           (gl:use-program program)
           (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 100.0))
           (gl-array :array-buffer array-buffer :float cube-points)
           (gl-array :element-array-buffer element-array-buffer :unsigned-short cube-elements)
-          (sdl2:with-event-loop (:method :poll)
-            (:keydown
-             (:keysym keysym)
-             (let ((scancode (sdl2:scancode-value keysym)))
-               (setf scancodes (adjoin scancode scancodes))))
-
-            (:keyup
-             (:keysym keysym)
-             (let ((scancode (sdl2:scancode-value keysym)))
-               (if (member scancode scancodes)
-                   (setf scancodes (set-difference scancodes (list scancode))))
-               (when (sdl2:scancode= scancode :scancode-escape)
-                 (sdl2:push-event :quit))))
-
-            ;; (:mousemotion
-            ;;  (:xrel xrel :yrel yrel)
-            ;;  (setf (camera-eye camera-test) (vector (- (elt (camera-eye camera-test) 0) (/ xrel width 1/32)) (- (elt (camera-eye camera-test) 1) (/ yrel height 0.5)) 1.0)))
-
-            (:idle
-             ()
-             (if scancodes (map nil #'(lambda (scancode) (move-camera camera-test scancode)) scancodes))
-             (with-vertex-attrib-array (program array-buffer element-array-buffer 0 3 :float)
-               (gl:clear :color-buffer :depth-buffer)
-               (uniform-vector program 'offset #(1.0 -2.0 -10.0))
-               (uniform-matrix program 'view-matrix (look-at-matrix (camera-eye camera-test)
-                                                                    (camera-direction camera-test)
-                                                                    (camera-up camera-test)))
-               (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count (length cube-elements)))
-             (gl:flush)
-             (sdl2:gl-swap-window window))
-
-            (:quit () t)))))))
+          (gl:use-program 0)
+          (with-game-loop (window)
+            ;; FIXME: Relies on a list defined within with-game-loop.
+            (if keydown-scancodes (map nil #'(lambda (scancode) (move-camera camera-test scancode)) keydown-scancodes))
+            (with-vertex-attrib-array (program array-buffer element-array-buffer 0 3 :float)
+              (gl:clear :color-buffer :depth-buffer)
+              (uniform-vector program 'offset #(1.0 -2.0 -10.0))
+              (uniform-matrix program 'view-matrix (look-at-matrix (camera-eye camera-test)
+                                                                   (camera-direction camera-test)
+                                                                   (camera-up camera-test)))
+              (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count (length cube-elements)))))))))
