@@ -41,6 +41,12 @@
          (map nil #'gl:delete-shader ,shaders)
          (gl:delete-program ,program)))))
 
+(defmacro with-shader-program ((program) &body body)
+  `(unwind-protect
+        (progn (gl:use-program ,program)
+               ,@body)
+     (gl:use-program 0)))
+
 (defmacro with-vertex-attrib-array ((program array-buffer element-array-buffer index size type) &body body)
   `(unwind-protect
         (progn (gl:use-program ,program)

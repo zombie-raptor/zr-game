@@ -36,7 +36,7 @@
   (if (sdl2:scancode= scancode :scancode-r) (incf (elt (camera-eye camera) 2) -0.01))
   (if (sdl2:scancode= scancode :scancode-y) (incf (elt (camera-eye camera) 2) 0.01)))
 
-(defmacro with-game-loop ((window) &body body)
+(defmacro with-game-loop ((window keydown-actions) &body body)
   `(let ((keydown-scancodes nil))
      (sdl2:with-event-loop (:method :poll)
        (:keydown
@@ -54,6 +54,8 @@
 
        (:idle
         ()
+        (gl:clear :color-buffer :depth-buffer)
+        (if keydown-scancodes (map nil ,keydown-actions keydown-scancodes))
         (progn ,@body)
         (gl:flush)
         (sdl2:gl-swap-window ,window))
@@ -71,16 +73,12 @@
               (element-array-buffer (elt buffers 1))
               (cube-points (get-cube-group-points 8 :offset #(0.0 -4.0 -10.0)))
               (cube-elements (get-cube-elements 8)))
-          (gl:use-program program)
-          (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 100.0))
-          (gl-array :array-buffer array-buffer :float cube-points)
-          (gl-array :element-array-buffer element-array-buffer :unsigned-short cube-elements)
-          (gl:use-program 0)
-          (with-game-loop (window)
-            ;; FIXME: Relies on a list defined within with-game-loop.
-            (if keydown-scancodes (map nil #'(lambda (scancode) (move-camera camera-test scancode)) keydown-scancodes))
+          (with-shader-program (program)
+            (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 100.0))
+            (gl-array :array-buffer array-buffer :float cube-points)
+            (gl-array :element-array-buffer element-array-buffer :unsigned-short cube-elements))
+          (with-game-loop (window #'(lambda (scancode) (move-camera camera-test scancode)))
             (with-vertex-attrib-array (program array-buffer element-array-buffer 0 3 :float)
-              (gl:clear :color-buffer :depth-buffer)
               (uniform-vector program 'offset #(1.0 -2.0 -10.0))
               (uniform-matrix program 'view-matrix (look-at-matrix (camera-eye camera-test)
                                                                    (camera-direction camera-test)
