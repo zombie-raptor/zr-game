@@ -20,42 +20,6 @@
                             (:defun main void ()
                              (:setf out-color (:vec4 0.5 0.5 1.0 1.0)))))))
 
-(defun move-camera (camera scancode)
-  (cond ((sdl2:scancode= scancode :scancode-q) (move camera -0.1 :y))
-        ((sdl2:scancode= scancode :scancode-e) (move camera 0.1 :y))
-        ((sdl2:scancode= scancode :scancode-a) (move camera -0.1 :x))
-        ((sdl2:scancode= scancode :scancode-d) (move camera 0.1 :x))
-        ((sdl2:scancode= scancode :scancode-s) (move camera 0.1 :z))
-        ((sdl2:scancode= scancode :scancode-w) (move camera -0.1 :z))))
-
-(defmacro with-game-loop ((window keydown-actions) &body body)
-  `(let ((keydown-scancodes nil))
-     (sdl2:with-event-loop (:method :poll)
-       (:keydown
-        (:keysym keysym)
-        (let ((scancode (sdl2:scancode-value keysym)))
-          (setf keydown-scancodes (adjoin scancode keydown-scancodes))))
-
-       (:keyup
-        (:keysym keysym)
-        (let ((scancode (sdl2:scancode-value keysym)))
-          (if (member scancode keydown-scancodes)
-              (setf keydown-scancodes (set-difference keydown-scancodes (list scancode))))
-          (when (sdl2:scancode= scancode :scancode-escape)
-            (sdl2:push-event :quit))))
-
-       (:idle
-        ()
-        (gl:clear :color-buffer :depth-buffer)
-        (if keydown-scancodes (map nil ,keydown-actions keydown-scancodes))
-        (progn ,@body)
-        (gl:flush)
-        (sdl2:gl-swap-window ,window))
-
-       (:quit
-        ()
-        t))))
-
 (defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test"))
   (with-sdl2 (window :title title :width width :height height)
     (with-buffers (buffers :count 2)

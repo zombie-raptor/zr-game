@@ -66,27 +66,3 @@
 
 (defun uniform-vector (program vector-name vector)
   (gl:uniformfv (gl:get-uniform-location program (glsl-name vector-name)) vector))
-
-(defclass camera ()
-  ((camera-eye
-    :initarg :camera-eye
-    :accessor camera-eye
-    :initform (list 0.0 0.0 1.0))
-   (camera-direction
-    :initarg :camera-direction
-    :accessor camera-direction
-    :initform (list 0.0 0.0 0.0))
-   (camera-up
-    :initarg :camera-up
-    :accessor camera-up
-    :initform (list 0.0 1.0 0.0))))
-
-(defgeneric move (object magnitude direction))
-
-(defmethod move ((object camera) magnitude direction)
-  (let ((i (case direction
-             ((:x) 0)
-             ((:y) 1)
-             ((:z) 2))))
-  (incf (elt (camera-eye object) i) magnitude)
-  (incf (elt (camera-direction object) i) magnitude)))
