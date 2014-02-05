@@ -8,22 +8,26 @@
 (in-package #:cl-foo)
 
 (defparameter *shaders*
-  (list (make-glsl-shader '((:defvar position vec3 :storage in :location 0)
-                            (:defvar offset vec3 :storage uniform)
-                            (:defvar view-matrix mat4 :storage uniform)
-                            (:defvar projection-matrix mat4 :storage uniform)
-                            (:defun main void ()
-                             (:setf gl-position (:* projection-matrix
-                                                    view-matrix
-                                                    (:vec4 (:+ position offset) 1.0))))))
-        (make-glsl-shader '((:defvar out-color vec4 :storage out)
-                            (:defun main void ()
-                             (:setf out-color (:vec4 0.5 0.5 1.0 1.0)))))))
+  (list (make-instance 'shader
+                       :type :vertex-shader
+                       :source '((:defvar position vec3 :storage in :location 0)
+                                 (:defvar offset vec3 :storage uniform)
+                                 (:defvar view-matrix mat4 :storage uniform)
+                                 (:defvar projection-matrix mat4 :storage uniform)
+                                 (:defun main void ()
+                                         (:setf gl-position (:* projection-matrix
+                                                                view-matrix
+                                                                (:vec4 (:+ position offset) 1.0))))))
+        (make-instance 'shader
+                       :type :fragment-shader
+                       :source '((:defvar out-color vec4 :storage out)
+                                 (:defun main void ()
+                                         (:setf out-color (:vec4 0.5 0.5 1.0 1.0)))))))
 
 (defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test"))
   (with-sdl2 (window :title title :width width :height height)
     (with-buffers (buffers :count 2)
-      (with-shaders (shaders program :shader-list *shaders* :shader-type-list '(:vertex-shader :fragment-shader))
+      (with-shaders (shaders program *shaders*)
         (let ((camera-test (make-instance 'camera))
               (array-buffer (elt buffers 0))
               (element-array-buffer (elt buffers 1))

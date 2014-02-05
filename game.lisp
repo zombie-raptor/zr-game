@@ -24,8 +24,8 @@
              ((:x) 0)
              ((:y) 1)
              ((:z) 2))))
-  (incf (elt (camera-eye object) i) magnitude)
-  (incf (elt (camera-direction object) i) magnitude)))
+    (incf (elt (camera-eye object) i) magnitude)
+    (incf (elt (camera-direction object) i) magnitude)))
 
 (defun move-camera (camera scancode)
   (cond ((sdl2:scancode= scancode :scancode-q) (move camera -0.1 :y))

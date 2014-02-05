@@ -30,10 +30,10 @@
           (progn ,@body)
        (gl:delete-buffers ,buffers))))
 
-(defmacro with-shaders ((shaders program &key shader-list shader-type-list) &body body)
+(defmacro with-shaders ((shaders program shader-list) &body body)
   ;; FIXME: Assumes that all of the given shaders are used in the same
   ;; program.
-  `(let* ((,shaders (mapcar #'string-to-shader ,shader-list ,shader-type-list))
+  `(let* ((,shaders (mapcar #'compile-shader ,shader-list))
           (,program (shader-program ,shaders)))
      (unwind-protect
           (progn ,@body)

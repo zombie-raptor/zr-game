@@ -20,11 +20,15 @@
            #:with-buffers
            #:with-sdl2
            #:with-shaders
+           #:with-shader-program
            #:with-vertex-attrib-array
-           #:gl-array
+           #:make-array-buffer
            #:uniform-matrix
            #:uniform-vector
            ;; Shaders
-           #:string-to-shader
+           #:compile-shader
            #:shader-program
-           #:make-glsl-shader))
+           #:make-glsl-shader
+           #:shader
+           #:shader-source
+           #:shader-type))
