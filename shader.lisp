@@ -44,7 +44,7 @@
   (let ((first-arg (first args))
         (rest-args (rest args)))
     (format nil
-            "~%~A ~A(~@[~A~]~{, ~A~})~%{~%  ~{~A~}}"
+            "~%~A ~A(~@[~A~]~{, ~A~})~%{~%~{  ~A~}}"
             (glsl-name type)
             (glsl-name name)
             (if first-arg (glsl-function-argument first-arg))
