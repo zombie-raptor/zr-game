@@ -99,10 +99,23 @@
 ;;; the beginning and end points. Each loop here is a face in a cube,
 ;;; and this is repeated for as many cubes as required.
 (defun get-cube-elements (cube-count)
-  (let ((v nil))
-    (dotimes (i (* cube-count 6))
-      (let ((x (* i 4)))
-        (setf v (concatenate 'vector v (vector x (+ x 1) (+ x 2) (+ x 2) (+ x 3) x)))))
+  (let ((v nil)
+        (triangle-vertices #(0 1 2 2 3 0)))
+    (dotimes (i (* cube-count))
+      (let ((x (* i 6 4)))
+        (setf v (concatenate 'vector v (map 'vector '+ (vector (+ x 0) (+ x 0) (+ x 0) (+ x 0) (+ x 0) (+ x 0)
+                                                               (+ x 4) (+ x 4) (+ x 4) (+ x 4) (+ x 4) (+ x 4)
+                                                               (+ x 8) (+ x 8) (+ x 8) (+ x 8) (+ x 8) (+ x 8)
+                                                               (+ x 12) (+ x 12) (+ x 12) (+ x 12) (+ x 12) (+ x 12)
+                                                               (+ x 16) (+ x 16) (+ x 16) (+ x 16) (+ x 16) (+ x 16)
+                                                               (+ x 20) (+ x 20) (+ x 20) (+ x 20) (+ x 20) (+ x 20))
+                                            (concatenate 'vector
+                                                         triangle-vertices
+                                                         triangle-vertices
+                                                         triangle-vertices
+                                                         triangle-vertices
+                                                         triangle-vertices
+                                                         triangle-vertices))))))
     v))
 
 ;;; Generates 6 faces on a cube from the 8 points on a cube of a given
@@ -124,10 +137,12 @@
                  point8 point1 point4 point6    ; left
                  point2 point7 point5 point3))) ; right
 
-(defun get-cube-group-points (length &key (offset #(0.0 0.0 0.0)))
+(defun get-cube-group-points (width height depth &key (offset #(0.0 0.0 0.0)))
   (let ((v nil))
-    (dotimes (i length)
-      (setf v (concatenate 'vector v (get-cube-points :offset (vector (elt offset 0)
-                                                                      (+ (elt offset 1) (* 2 i))
-                                                                      (elt offset 2))))))
+    (dotimes (x width)
+      (dotimes (y height)
+        (dotimes (z depth)
+          (setf v (concatenate 'vector v (get-cube-points :offset (vector (+ (elt offset 0) (* 2 x))
+                                                                          (+ (elt offset 1) (* 2 y))
+                                                                          (+ (elt offset 2) (* 2 z)))))))))
     v))
