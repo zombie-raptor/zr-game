@@ -27,6 +27,9 @@
     (incf (elt (camera-eye object) i) magnitude)
     (incf (elt (camera-direction object) i) magnitude)))
 
+(defun camera-matrix (camera)
+  (look-at-matrix (camera-eye camera) (camera-direction camera) (camera-up camera)))
+
 (defun move-camera (camera scancode)
   (cond ((sdl2:scancode= scancode :scancode-q) (move camera -0.1 :y))
         ((sdl2:scancode= scancode :scancode-e) (move camera 0.1 :y))

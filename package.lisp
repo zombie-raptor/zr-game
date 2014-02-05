@@ -17,11 +17,12 @@
            #:get-cube-points
            ;; Graphics
            #:camera
+           #:camera-matrix
            #:with-buffers
            #:with-sdl2
            #:with-shaders
            #:with-shader-program
-           #:with-vertex-attrib-array
+           #:with-vao
            #:make-array-buffer
            #:uniform-matrix
            #:uniform-vector

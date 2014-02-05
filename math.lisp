@@ -29,9 +29,6 @@
   (reduce #'+ (map 'vector #'* u v)))
 
 ;;; SPECIAL MATRICES
-;;;
-;;; FIXME: There are probably still mistakes in here. Carefully go
-;;; through this.
 
 ;;; Implementation of the gluPerspective matrix.
 ;;; https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml

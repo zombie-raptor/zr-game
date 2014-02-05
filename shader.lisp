@@ -3,20 +3,19 @@
 ;;;; works with a small subset of GLSL that I have tested in the very
 ;;;; simple shaders that are used elsewhere in CL-FOO. It will expand
 ;;;; in complexity as the shaders I am using expand in complexity.
-;;;;
-;;;; FIXME: Improve the handling of types?
 
 (in-package #:cl-foo)
 
-;;; FIXME: This replaces anything that starts with gl with gl_, but it
-;;; really should replace anything that starts with gl[A-Z] with
-;;; gl_[A-Z] because otherwise names like "glare" will become
-;;; "gl_are".
+;;; GLSL uses camelcase for almost everything. The only apparent
+;;; exception is things prefixed with gl_.
 (defun glsl-name (symbol)
-  (cl-ppcre:regex-replace "^gl" (cffi:translate-camelcase-name symbol) "gl_"))
+  (let ((camelcase-string (cffi:translate-camelcase-name symbol)))
+    (if (cl-ppcre:scan "^gl[A-Z]" camelcase-string)
+        (cl-ppcre:regex-replace "^gl" camelcase-string "gl_")
+        camelcase-string)))
 
-;;;; FIXME: Obviously not exhaustive. How should I represent true,
-;;;; false, and void?
+;;; Obviously not exhaustive. More will be added as I write more
+;;; complex shaders.
 (defun glsl-element (element)
   (cond
     ((null element) nil)
@@ -31,12 +30,16 @@
 (defun unary-op (symbol-string first-elt)
   (format nil "~A(~A)" symbol-string first-elt))
 
+(defun glsl-function-argument (arg)
+  (format nil "~A ~A" (glsl-name (elt arg 1)) (glsl-name (elt arg 0))))
+
 ;;; Takes in a name, a type, a list of arguments, and a body and
 ;;; returns a string representation of a GLSL function. The argument
 ;;; list can be blank or can be arbitrarily long.
 ;;;
-;;; FIXME: At the moment, it just takes in argument names, which does
-;;; not include their types.
+;;; It takes in typed arguments like defmethod, with each argument
+;;; being a list of two symbols, the first as the name and the second
+;;; as the type.
 (defun glsl-function (name type args body)
   (let ((first-arg (first args))
         (rest-args (rest args)))
@@ -44,8 +47,8 @@
             "~%~A ~A(~@[~A~]~{, ~A~})~%{~%  ~{~A~}}"
             (glsl-name type)
             (glsl-name name)
-            (if first-arg (glsl-name first-arg))
-            (if rest-args (mapcar #'glsl-name rest-args))
+            (if first-arg (glsl-function-argument first-arg))
+            (if rest-args (mapcar #'glsl-function-argument rest-args))
             (mapcar #'glsl-line body))))
 
 ;;; This line is used to define a GLSL variable of a type and name. If
@@ -89,8 +92,6 @@
 
 ;;; The s-expressions are a one-line-operation, a function, or an
 ;;; in-line operation or function call.
-;;;
-;;; FIXME: Does this name make sense anymore?
 (defun glsl-line (l)
   (let ((symbol (elt l 0)))
     (case symbol

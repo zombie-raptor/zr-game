@@ -30,9 +30,8 @@
           (progn ,@body)
        (gl:delete-buffers ,buffers))))
 
+;;; FIXME: Assumes all of the given shaders are used in one program.
 (defmacro with-shaders ((shaders program shader-list) &body body)
-  ;; FIXME: Assumes that all of the given shaders are used in the same
-  ;; program.
   `(let* ((,shaders (mapcar #'compile-shader ,shader-list))
           (,program (shader-program ,shaders)))
      (unwind-protect
@@ -47,7 +46,7 @@
                ,@body)
      (gl:use-program 0)))
 
-(defmacro with-vertex-attrib-array ((program array-buffer element-array-buffer index size count type) &body body)
+(defmacro with-vao ((program array-buffer element-array-buffer index size count type) &body body)
   `(unwind-protect
         (progn (gl:use-program ,program)
                (gl:bind-buffer :array-buffer ,array-buffer)
