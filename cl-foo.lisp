@@ -20,8 +20,11 @@
                                  (:defun main :void ()
                                          (:setf out-color (:vec4 0.5 0.5 1.0 1.0)))))))
 
-(defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test"))
+(defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test") (fullscreen nil))
   (with-sdl2 (window :title title :width width :height height)
+    ;; In my experience, fullscreen only works properly if the
+    ;; resolution is the same as your monitor's resolution.
+    (if fullscreen (sdl2:set-window-fullscreen window 1))
     (with-buffers (buffers :count 2)
       (with-shaders (shaders program *shaders*)
         (let ((camera (make-instance 'camera))
