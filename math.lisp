@@ -120,15 +120,15 @@
 
 ;;; Generates 6 faces on a cube from the 8 points on a cube of a given
 ;;; size with the cube center at OFFSET.
-(defun get-cube-points (&key (size 1.0) (offset #(0.0 0.0 0.0)))
-  (let ((point1 (map 'vector #'+ (vector (- size) (- size) (+ size)) offset))
-        (point2 (map 'vector #'+ (vector (+ size) (- size) (+ size)) offset))
-        (point3 (map 'vector #'+ (vector (+ size) (+ size) (+ size)) offset))
-        (point4 (map 'vector #'+ (vector (- size) (+ size) (+ size)) offset))
-        (point5 (map 'vector #'+ (vector (+ size) (+ size) (- size)) offset))
-        (point6 (map 'vector #'+ (vector (- size) (+ size) (- size)) offset))
-        (point7 (map 'vector #'+ (vector (+ size) (- size) (- size)) offset))
-        (point8 (map 'vector #'+ (vector (- size) (- size) (- size)) offset)))
+(defun get-cube-points (&key (size 1.0) (offset #(0.0 0.0 0.0 0.0)))
+  (let ((point1 (map 'vector #'+ (vector (- size) (- size) (+ size) 1.0) offset))
+        (point2 (map 'vector #'+ (vector (+ size) (- size) (+ size) 1.0) offset))
+        (point3 (map 'vector #'+ (vector (+ size) (+ size) (+ size) 1.0) offset))
+        (point4 (map 'vector #'+ (vector (- size) (+ size) (+ size) 1.0) offset))
+        (point5 (map 'vector #'+ (vector (+ size) (+ size) (- size) 1.0) offset))
+        (point6 (map 'vector #'+ (vector (- size) (+ size) (- size) 1.0) offset))
+        (point7 (map 'vector #'+ (vector (+ size) (- size) (- size) 1.0) offset))
+        (point8 (map 'vector #'+ (vector (- size) (- size) (- size) 1.0) offset)))
     (concatenate 'vector
                  point1 point2 point3 point4    ; front
                  point4 point3 point5 point6    ; top
@@ -137,12 +137,13 @@
                  point8 point1 point4 point6    ; left
                  point2 point7 point5 point3))) ; right
 
-(defun get-cube-group-points (width height depth &key (offset #(0.0 0.0 0.0)))
+(defun get-cube-group-points (width height depth &key (offset #(0.0 0.0 0.0 0.0)))
   (let ((v nil))
     (dotimes (x width)
       (dotimes (y height)
         (dotimes (z depth)
           (setf v (concatenate 'vector v (get-cube-points :offset (vector (+ (elt offset 0) (* 2 x))
                                                                           (+ (elt offset 1) (* 2 y))
-                                                                          (+ (elt offset 2) (* 2 z)))))))))
+                                                                          (+ (elt offset 2) (* 2 z))
+                                                                          1.0)))))))
     v))
