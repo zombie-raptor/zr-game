@@ -1,18 +1,11 @@
 ;;;; package.lisp
 
 (defpackage #:cl-foo
-  (:use #:cl #:sdl2 #:cl-ppcre)
+  (:use #:cl #:sdl2 #:cl-ppcre #:sb-cga)
   (:export #:main-loop
            ;; Math
-           #:magnitude
-           #:normalize
-           #:cross-product
-           #:dot-product
            #:perspective-matrix
            #:look-at-matrix
-           #:translation-matrix
-           #:scale-matrix
-           #:matrix-product
            #:get-cube-points
            #:get-cube-group
            ;; Graphics

@@ -30,7 +30,7 @@
         (let* ((camera (make-instance 'camera))
                (array-buffer (elt buffers 0))
                (element-array-buffer (elt buffers 1))
-               (cube-group (get-cube-group 10 20 1 :offset #(0.0 -4.0 -10.0.0 0.0)))
+               (cube-group (get-cube-group 10 20 1 :offset #(0.0 -4.0 -10.0 0.0)))
                (cube-points (elt cube-group 1))
                (cube-elements (elt cube-group 0)))
           (with-shader-program (program)
