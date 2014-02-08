@@ -75,46 +75,21 @@
         (col-b-1 (vector (elt b 1) (elt b 5) (elt b 9) (elt b 13)))
         (col-b-2 (vector (elt b 2) (elt b 6) (elt b 10) (elt b 14)))
         (col-b-3 (vector (elt b 3) (elt b 7) (elt b 11) (elt b 15))))
-    (vector
-     (dot-product row-a-0 col-b-0)
-     (dot-product row-a-0 col-b-1)
-     (dot-product row-a-0 col-b-2)
-     (dot-product row-a-0 col-b-3)
-     (dot-product row-a-1 col-b-0)
-     (dot-product row-a-1 col-b-1)
-     (dot-product row-a-1 col-b-2)
-     (dot-product row-a-1 col-b-3)
-     (dot-product row-a-2 col-b-0)
-     (dot-product row-a-2 col-b-1)
-     (dot-product row-a-2 col-b-2)
-     (dot-product row-a-2 col-b-3)
-     (dot-product row-a-3 col-b-0)
-     (dot-product row-a-3 col-b-1)
-     (dot-product row-a-3 col-b-2)
-     (dot-product row-a-3 col-b-3))))
+    (map 'vector #'dot-product
+         (vector row-a-0 row-a-0 row-a-0 row-a-0
+                 row-a-1 row-a-1 row-a-1 row-a-1
+                 row-a-2 row-a-2 row-a-2 row-a-2
+                 row-a-3 row-a-3 row-a-3 row-a-3)
+         (vector col-b-0 col-b-1 col-b-2 col-b-3
+                 col-b-0 col-b-1 col-b-2 col-b-3
+                 col-b-0 col-b-1 col-b-2 col-b-3
+                 col-b-0 col-b-1 col-b-2 col-b-3))))
 
 ;;; GEOMETRY
 
-;;; Each of the 6 faces in a cube is a pair of two triangles who share
-;;; the beginning and end points. Each loop here is a face in a cube,
-;;; and this is repeated for as many cubes as required.
-(defun get-cube-elements (offset)
-  (let ((triangle-vertices #(0 1 2 2 3 0))
-        (i (* offset 6 4)))
-    (map 'vector
-         #'+
-         (make-array (* 6 6) :initial-element i)
-         (concatenate 'vector
-                      (map 'vector #'+ (make-array 6 :initial-element (* 0 4)) triangle-vertices)
-                      (map 'vector #'+ (make-array 6 :initial-element (* 1 4)) triangle-vertices)
-                      (map 'vector #'+ (make-array 6 :initial-element (* 2 4)) triangle-vertices)
-                      (map 'vector #'+ (make-array 6 :initial-element (* 3 4)) triangle-vertices)
-                      (map 'vector #'+ (make-array 6 :initial-element (* 4 4)) triangle-vertices)
-                      (map 'vector #'+ (make-array 6 :initial-element (* 5 4)) triangle-vertices)))))
-
 ;;; Generates 6 faces on a cube from the 8 points on a cube of a given
 ;;; size with the cube center at OFFSET.
-(defun get-cube-points (&key (size 1.0) (offset #(0.0 0.0 0.0 0.0)))
+(defun get-cube-points (&key (size 0.25) (offset #(0.0 0.0 0.0 0.0)))
   (let ((point1 (map 'vector #'+ (vector (- size) (- size) (+ size) 1.0) offset))
         (point2 (map 'vector #'+ (vector (+ size) (- size) (+ size) 1.0) offset))
         (point3 (map 'vector #'+ (vector (+ size) (+ size) (+ size) 1.0) offset))
@@ -134,14 +109,25 @@
 (defun get-cube-group (width height depth &key (offset #(0.0 0.0 0.0 0.0)))
   (let ((v nil)
         (u nil)
-        (i 0))
+        (i 0)
+        (triangle-points (reduce #'(lambda (x y) (concatenate 'vector x y))
+                                 (map 'vector #'(lambda (x y) (map 'vector #'+ x y))
+                                      (vector (make-array 6 :initial-element (* 0 4))
+                                              (make-array 6 :initial-element (* 1 4))
+                                              (make-array 6 :initial-element (* 2 4))
+                                              (make-array 6 :initial-element (* 3 4))
+                                              (make-array 6 :initial-element (* 4 4))
+                                              (make-array 6 :initial-element (* 5 4)))
+                                      (make-array 6 :initial-element #(0 1 2 2 3 0))))))
     (dotimes (x width)
       (dotimes (y height)
         (dotimes (z depth)
-          (setf v (concatenate 'vector v (get-cube-points :offset (vector (+ (elt offset 0) (* 2 x))
-                                                                          (+ (elt offset 1) (* 2 y))
-                                                                          (+ (elt offset 2) (* 2 z))
+          (setf v (concatenate 'vector v (get-cube-points :offset (vector (+ (elt offset 0) x)
+                                                                          (+ (elt offset 1) y)
+                                                                          (+ (elt offset 2) z)
                                                                           1.0))))
-          (setf u (concatenate 'vector u (get-cube-elements i)))
+          (setf u (concatenate 'vector u (map 'vector #'+
+                                              (make-array (* 6 6) :initial-element (* i 6 4))
+                                              triangle-points)))
           (incf i))))
     (vector u v)))

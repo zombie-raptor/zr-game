@@ -13,8 +13,8 @@
            #:translation-matrix
            #:scale-matrix
            #:matrix-product
-           #:get-cube-elements
            #:get-cube-points
+           #:get-cube-group
            ;; Graphics
            #:camera
            #:camera-matrix
