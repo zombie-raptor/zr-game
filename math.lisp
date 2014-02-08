@@ -67,23 +67,23 @@
 ;;; MATRIX OPERATIONS
 
 (defun matrix-product (a b)
-  (let ((row-a-0 (vector (elt a 0) (elt a 1) (elt a 2) (elt a 3)))
-        (row-a-1 (vector (elt a 4) (elt a 5) (elt a 6) (elt a 7)))
-        (row-a-2 (vector (elt a 8) (elt a 9) (elt a 10) (elt a 11)))
-        (row-a-3 (vector (elt a 12) (elt a 13) (elt a 14) (elt a 15)))
-        (col-b-0 (vector (elt b 0) (elt b 4) (elt b 8) (elt b 12)))
-        (col-b-1 (vector (elt b 1) (elt b 5) (elt b 9) (elt b 13)))
-        (col-b-2 (vector (elt b 2) (elt b 6) (elt b 10) (elt b 14)))
-        (col-b-3 (vector (elt b 3) (elt b 7) (elt b 11) (elt b 15))))
+  (let ((a-rows (vector (vector (elt a 0) (elt a 1) (elt a 2) (elt a 3))
+                        (vector (elt a 4) (elt a 5) (elt a 6) (elt a 7))
+                        (vector (elt a 8) (elt a 9) (elt a 10) (elt a 11))
+                        (vector (elt a 12) (elt a 13) (elt a 14) (elt a 15))))
+        (b-cols (vector (vector (elt b 0) (elt b 4) (elt b 8) (elt b 12))
+                        (vector (elt b 1) (elt b 5) (elt b 9) (elt b 13))
+                        (vector (elt b 2) (elt b 6) (elt b 10) (elt b 14))
+                        (vector (elt b 3) (elt b 7) (elt b 11) (elt b 15)))))
     (map 'vector #'dot-product
-         (vector row-a-0 row-a-0 row-a-0 row-a-0
-                 row-a-1 row-a-1 row-a-1 row-a-1
-                 row-a-2 row-a-2 row-a-2 row-a-2
-                 row-a-3 row-a-3 row-a-3 row-a-3)
-         (vector col-b-0 col-b-1 col-b-2 col-b-3
-                 col-b-0 col-b-1 col-b-2 col-b-3
-                 col-b-0 col-b-1 col-b-2 col-b-3
-                 col-b-0 col-b-1 col-b-2 col-b-3))))
+         (vector (elt a-rows 0) (elt a-rows 0) (elt a-rows 0) (elt a-rows 0)
+                 (elt a-rows 1) (elt a-rows 1) (elt a-rows 1) (elt a-rows 1)
+                 (elt a-rows 2) (elt a-rows 2) (elt a-rows 2) (elt a-rows 2)
+                 (elt a-rows 3) (elt a-rows 3) (elt a-rows 3) (elt a-rows 3))
+         (vector (elt b-cols 0) (elt b-cols 1) (elt b-cols 2) (elt b-cols 3)
+                 (elt b-cols 0) (elt b-cols 1) (elt b-cols 2) (elt b-cols 3)
+                 (elt b-cols 0) (elt b-cols 1) (elt b-cols 2) (elt b-cols 3)
+                 (elt b-cols 0) (elt b-cols 1) (elt b-cols 2) (elt b-cols 3)))))
 
 ;;; GEOMETRY
 
