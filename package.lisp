@@ -4,21 +4,24 @@
   (:use #:cl #:sdl2 #:cl-ppcre #:sb-cga)
   (:export #:main-loop
            ;; Math
-           #:perspective-matrix
-           #:look-at-matrix
            #:get-cube-points
            #:get-cube-group
-           ;; Graphics
+           ;; Game
            #:camera
            #:camera-matrix
-           #:with-buffers
+           #:move-camera
+           ;; Graphics
            #:with-sdl2
+           #:with-game-loop
+           #:with-buffers
            #:with-shaders
            #:with-shader-program
            #:with-vao
            #:make-array-buffer
            #:uniform-matrix
            #:uniform-vector
+           #:perspective-matrix
+           #:look-at-matrix
            ;; Shaders
            #:compile-shader
            #:shader-program

@@ -1,18 +1,15 @@
-;;;; This file contains a variety of functions and macros that help
-;;;; with the OpenGL graphics.
+;;;; GRAPHICS.LISP
+;;; This file takes the relatively low-level APIs of cl-sdl2,
+;;; cl-opengl, and sb-cga and turns them into a more abstracted
+;;; graphics API so that the rest of the program can use code that
+;;; looks more like Lisp code.
 
 (in-package #:cl-foo)
 
-;;; Puts a vector into a GL buffer as a GL array.
-(defun make-array-buffer (buffer-type buffer array-type vect)
-  (let ((array (gl:alloc-gl-array array-type (length vect))))
-    (dotimes (i (length vect))
-      (setf (gl:glaref array i) (aref vect i)))
-    (gl:bind-buffer buffer-type buffer)
-    (gl:buffer-data buffer-type :static-draw array)
-    (gl:free-gl-array array)
-    (gl:bind-buffer buffer-type 0)
-    buffer))
+;;;; SDL2
+;;; This section abstracts over the SDL2 (and some OpenGL) verbosity,
+;;; mainly so that actual programs do not need ridiculous levels of
+;;; indentation.
 
 (defmacro with-sdl2 ((window &key (title "CL-FOO") (width 1280) (height 720)) &body body)
   `(sdl2:with-init (:everything)
@@ -23,6 +20,40 @@
          (gl:enable :depth-test :cull-face)
          (gl:clear-color 0 0 0 1)
          ,@body))))
+
+(defmacro with-game-loop ((window keydown-actions) &body body)
+  `(let ((keydown-scancodes nil))
+     (sdl2:with-event-loop (:method :poll)
+       (:keydown
+        (:keysym keysym)
+        (let ((scancode (sdl2:scancode-value keysym)))
+          (setf keydown-scancodes (adjoin scancode keydown-scancodes))))
+
+       (:keyup
+        (:keysym keysym)
+        (let ((scancode (sdl2:scancode-value keysym)))
+          (if (member scancode keydown-scancodes)
+              (setf keydown-scancodes (set-difference keydown-scancodes (list scancode))))
+          (when (sdl2:scancode= scancode :scancode-escape)
+            (sdl2:push-event :quit))))
+
+       (:idle
+        ()
+        (gl:clear :color-buffer :depth-buffer)
+        (if keydown-scancodes (map nil ,keydown-actions keydown-scancodes))
+        (progn ,@body)
+        (gl:flush)
+        (sdl2:gl-swap-window ,window))
+
+       (:quit
+        ()
+        t))))
+
+;;;; OpenGL
+;;; This section hides the C-like OpenGL code. It is still very easy
+;;; to break things if the order or scope is wrong, and everything
+;;; here apparently needs to be within sdl2:with-gl-context (or
+;;; with-sdl2) to work.
 
 (defmacro with-buffers ((buffers &key (count 1)) &body body)
   `(let ((,buffers (gl:gen-buffers ,count)))
@@ -46,6 +77,17 @@
                ,@body)
      (gl:use-program 0)))
 
+;;; Puts a vector into a GL buffer as a GL array.
+(defun make-array-buffer (buffer-type buffer array-type vect)
+  (let ((array (gl:alloc-gl-array array-type (length vect))))
+    (dotimes (i (length vect))
+      (setf (gl:glaref array i) (aref vect i)))
+    (gl:bind-buffer buffer-type buffer)
+    (gl:buffer-data buffer-type :static-draw array)
+    (gl:free-gl-array array)
+    (gl:bind-buffer buffer-type 0)
+    buffer))
+
 (defmacro with-vao ((program array-buffer element-array-buffer index size count type) &body body)
   `(unwind-protect
         (progn (gl:use-program ,program)
@@ -66,3 +108,32 @@
 
 (defun uniform-vector (program vector-name vector)
   (gl:uniformfv (gl:get-uniform-location program (glsl-name vector-name)) vector))
+
+;;;; MATRICES
+;;; These provide common matrices that really should be in a graphics
+;;; library already.
+
+;;; Implementation of the gluPerspective matrix.
+;;; https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
+(defun perspective-matrix (fovy aspect znear zfar)
+  (let ((f (coerce (/ (tan (* fovy (/ pi 360.0)))) 'single-float)))
+    (sb-cga:matrix (/ f aspect) 0.0 0.0 0.0
+                   0.0 f 0.0 0.0
+                   0.0 0.0 (/ (+ zfar znear) (- znear zfar)) (/ (* 2.0 zfar znear) (- znear zfar))
+                   0.0 0.0 -1.0 0.0)))
+
+;;; Implementation of the gluLookAt matrix.
+;;; https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
+(defun look-at-matrix (eye target up)
+  (let* ((eye (sb-cga:vec (elt eye 0) (elt eye 1) (elt eye 2)))
+         (target (sb-cga:vec (elt target 0) (elt target 1) (elt target 2)))
+         (up (sb-cga:vec (elt up 0) (elt up 1) (elt up 2)))
+         (z (sb-cga:normalize (sb-cga:vec- target eye)))
+         (x (sb-cga:cross-product z (sb-cga:normalize up)))
+         (y (sb-cga:cross-product (sb-cga:normalize x) z))
+         (m1 (sb-cga:matrix (elt x 0) (elt x 1) (elt x 2) 0.0
+                            (elt y 0) (elt y 1) (elt y 2) 0.0
+                            (- (elt z 0)) (- (elt z 1)) (- (elt z 2)) 0.0
+                            0.0 0.0 0.0 1.0))
+         (m2 (sb-cga:translate (sb-cga:vec* eye -1.0))))
+    (sb-cga:matrix* m2 m1)))
