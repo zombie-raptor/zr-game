@@ -1,11 +1,11 @@
-;;;; Most of this file translates s-expressions to GLSL shader
-;;;; strings, which can then be compiled into OpenGL shaders. It is a
-;;;; work in progress. More will be added as more complex shaders are
-;;;; written.
+;;;; SHADER.LISP
+;;; This file translates s-expressions to GLSL shader strings, which
+;;; can then be compiled into OpenGL shaders. It is a work in
+;;; progress.
 
 (in-package #:cl-foo)
 
-;;; GLSL uses camelcase for almost everything. The only apparent
+;;; Note: GLSL uses camelcase for almost everything. The only apparent
 ;;; exception is things prefixed with gl_.
 (defun glsl-name (symbol)
   (let ((camelcase-string (cffi:translate-camelcase-name symbol)))
@@ -103,23 +103,6 @@
 ;;; Use this to make a shaders string from a list of lists.
 (defun make-glsl-shader (l)
   (format nil "~{~A~}" (mapcar #'glsl-line (cons '(:version 330) l))))
-
-(defun compile-shader (shader-object)
-  (let ((shader (gl:create-shader (shader-type shader-object))))
-    (gl:shader-source shader (shader-source shader-object))
-    (gl:compile-shader shader)
-    (if (not (gl:get-shader shader :compile-status))
-        (error (concatenate 'string "Error in compiling shader~%" (gl:get-shader-info-log shader))))
-    shader))
-
-(defun shader-program (shaders)
-  (let ((program (gl:create-program)))
-    (map nil #'(lambda (shader) (gl:attach-shader program shader)) shaders)
-    (gl:link-program program)
-    (if (not (gl:get-program program :link-status))
-        (error (concatenate 'string "Error in shader program~%" (gl:get-program-info-log program))))
-    (map nil #'(lambda (shader) (gl:detach-shader program shader)) shaders)
-    program))
 
 (defclass shader ()
   ((source

@@ -17,14 +17,14 @@
            #:with-shaders
            #:with-shader-program
            #:with-vao
+           #:compile-gl-shader
+           #:link-gl-program
            #:make-array-buffer
            #:uniform-matrix
            #:uniform-vector
            #:perspective-matrix
            #:look-at-matrix
            ;; Shaders
-           #:compile-shader
-           #:shader-program
            #:make-glsl-shader
            #:shader
            #:shader-source

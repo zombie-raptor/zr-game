@@ -63,8 +63,10 @@
 
 ;;; FIXME: Assumes all of the given shaders are used in one program.
 (defmacro with-shaders ((shaders program shader-list) &body body)
-  `(let* ((,shaders (mapcar #'compile-shader ,shader-list))
-          (,program (shader-program ,shaders)))
+  `(let* ((,shaders (mapcar #'(lambda (shader)
+                                (compile-gl-shader (shader-source shader) (shader-type shader)))
+                            ,shader-list))
+          (,program (link-gl-program ,shaders)))
      (unwind-protect
           (progn ,@body)
        (progn
@@ -76,6 +78,23 @@
         (progn (gl:use-program ,program)
                ,@body)
      (gl:use-program 0)))
+
+(defun compile-gl-shader (source type)
+  (let ((shader (gl:create-shader type)))
+    (gl:shader-source shader source)
+    (gl:compile-shader shader)
+    (if (not (gl:get-shader shader :compile-status))
+        (error (concatenate 'string "Error in compiling shader~%" (gl:get-shader-info-log shader))))
+    shader))
+
+(defun link-gl-program (shaders)
+  (let ((program (gl:create-program)))
+    (map nil #'(lambda (shader) (gl:attach-shader program shader)) shaders)
+    (gl:link-program program)
+    (if (not (gl:get-program program :link-status))
+        (error (concatenate 'string "Error in shader program~%" (gl:get-program-info-log program))))
+    (map nil #'(lambda (shader) (gl:detach-shader program shader)) shaders)
+    program))
 
 ;;; Puts a vector into a GL buffer as a GL array.
 (defun make-array-buffer (buffer-type buffer array-type vect)
