@@ -1,8 +1,7 @@
-;;;; This file translates s-expressions to GLSL shaders by making a
-;;;; string of GLSL source code. It is incomplete and currently only
-;;;; works with a small subset of GLSL that I have tested in the very
-;;;; simple shaders that are used elsewhere in CL-FOO. It will expand
-;;;; in complexity as the shaders I am using expand in complexity.
+;;;; Most of this file translates s-expressions to GLSL shader
+;;;; strings, which can then be compiled into OpenGL shaders. It is a
+;;;; work in progress. More will be added as more complex shaders are
+;;;; written.
 
 (in-package #:cl-foo)
 
@@ -14,8 +13,6 @@
         (cl-ppcre:regex-replace "^gl" camelcase-string "gl_")
         camelcase-string)))
 
-;;; Obviously not exhaustive. More will be added as I write more
-;;; complex shaders.
 (defun glsl-element (element)
   (cond
     ((null element) nil)

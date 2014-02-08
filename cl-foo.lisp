@@ -3,6 +3,7 @@
 
 (in-package #:cl-foo)
 
+;;; Yes, I know this looks ugly. It's temporary.
 (defparameter *shaders*
   (list (make-instance 'shader
                        :type :vertex-shader
@@ -20,24 +21,28 @@
                                  (:defun main :void ()
                                          (:setf out-color (:vec4 0.5 0.5 1.0 1.0)))))))
 
+;;; Note: SDL doesn't like it if the program is made fullscreen when
+;;; the resolution is not the monitor's current resolution, at least
+;;; on my machine.
 (defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test") (fullscreen nil))
   (with-sdl2 (window :title title :width width :height height)
-    ;; In my experience, fullscreen only works properly if the
-    ;; resolution is the same as your monitor's resolution.
     (if fullscreen (sdl2:set-window-fullscreen window 1))
     (with-buffers (buffers :count 2)
       (with-shaders (shaders program *shaders*)
-        (let* ((camera (make-instance 'camera))
-               (array-buffer (elt buffers 0))
-               (element-array-buffer (elt buffers 1))
-               (cube-group (get-cube-group 10 20 1 :offset #(0.0 -4.0 -10.0 0.0)))
-               (cube-points (elt cube-group 1))
-               (cube-elements (elt cube-group 0)))
+        (let ((camera (make-instance 'camera))
+              (array-buffer (elt buffers 0))
+              (element-array-buffer (elt buffers 1))
+              (cube-group (get-cube-group 10 20 1 :offset #(0.0 -4.0 -10.0 0.0))))
+
+          ;; Sets the parts of the program that don't need to be
+          ;; updated constantly in the loop.
           (with-shader-program (program)
             (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 100.0))
             (uniform-vector program 'offset #(1.0 -2.0 -10.0 0.0))
-            (make-array-buffer :array-buffer array-buffer :float cube-points)
-            (make-array-buffer :element-array-buffer element-array-buffer :unsigned-short cube-elements))
+            (make-array-buffer :array-buffer array-buffer :float (elt cube-group 1))
+            (make-array-buffer :element-array-buffer element-array-buffer :unsigned-short (elt cube-group 0)))
+
+          ;; Things to update while looping.
           (with-game-loop (window #'(lambda (scancode) (move-camera camera scancode)))
-            (with-vao (program array-buffer element-array-buffer 0 4 (length cube-elements) :float)
+            (with-vao (program array-buffer element-array-buffer 0 4 (length (elt cube-group 0)) :float)
               (uniform-matrix program 'view-matrix (camera-matrix camera)))))))))
