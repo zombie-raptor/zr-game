@@ -3,10 +3,10 @@
 (defpackage #:cl-foo
   (:use #:cl #:sdl2 #:cl-ppcre #:sb-cga)
   (:export #:main-loop
-           ;; Math
+           ;; Cubes
            #:get-cube-points
            #:get-cube-group
-           ;; Game
+           ;; Cameras
            #:camera
            #:camera-matrix
            #:move-camera
