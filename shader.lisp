@@ -5,8 +5,6 @@
 
 (in-package #:cl-foo)
 
-;;; Note: GLSL uses camelcase for almost everything. The only apparent
-;;; exception is things prefixed with gl_.
 (defun glsl-name (symbol)
   (let ((camelcase-string (cffi:translate-camelcase-name symbol)))
     (if (cl-ppcre:scan "^gl[A-Z]" camelcase-string)
@@ -16,7 +14,7 @@
 (defun glsl-element (element)
   (cond
     ((null element) nil)
-    ((listp element) (glsl-line (first element) (rest element)))
+    ((listp element) (glsl-shader (first element) (rest element)))
     ((symbolp element) (glsl-name element))
     (t element)))
 
@@ -49,7 +47,7 @@
             (glsl-name name)
             (if first-arg (glsl-function-argument first-arg))
             (if rest-args (mapcar #'glsl-function-argument rest-args))
-            (mapcar #'(lambda (l) (glsl-line (first l) (rest l))) body))))
+            (mapcar #'(lambda (l) (glsl-shader (first l) (rest l))) body))))
 
 ;;; This line is used to define a GLSL variable of a type and name. If
 ;;; a location integer is given then the proper syntax is provided for
@@ -65,8 +63,7 @@
           (glsl-name type)
           (glsl-name name)))
 
-;;; FIXME: *Now* this name doesn't make sense.
-(defun glsl-line (symbol l)
+(defun glsl-shader (symbol l)
   (let ((first-elt (first l))
         (rest-elt (rest l)))
     (case symbol
@@ -74,10 +71,10 @@
       ((:defvar) (glsl-var first-elt (first rest-elt)
                            :storage (getf (rest rest-elt) :storage)
                            :location (getf (rest rest-elt) :location)))
+      ((:version) (format nil "#version ~D~%~%" first-elt))
       (otherwise (let ((first-elt (glsl-element first-elt))
                        (rest-elt (mapcar #'glsl-element rest-elt)))
                    (case symbol
-                     ((:version) (format nil "#version ~D~%~%" first-elt))
                      ((:setf) (format nil "~A = ~A;~%" first-elt (first rest-elt)))
                      ((:+ :* :/ :> :< :>= :<= :and :or) (binary-op symbol first-elt rest-elt))
                      ((:not) (unary-op "!" first-elt))
@@ -86,9 +83,8 @@
                                (binary-op symbol first-elt rest-elt)))
                      (otherwise (format nil "~A(~@[~A~]~{, ~A~})" (glsl-name symbol) first-elt rest-elt))))))))
 
-;;; Use this to make a shaders string from a list of lists.
 (defun make-glsl-shader (l)
-  (format nil "~{~A~}" (mapcar #'(lambda (l) (glsl-line (first l) (rest l))) (cons '(:version 330) l))))
+  (format nil "~{~A~}" (mapcar #'(lambda (l) (glsl-shader (first l) (rest l))) l)))
 
 (defclass shader ()
   ((source

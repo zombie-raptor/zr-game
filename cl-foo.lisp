@@ -7,7 +7,8 @@
 (defparameter *shaders*
   (list (make-instance 'shader
                        :type :vertex-shader
-                       :source '((:defvar position :vec4 :storage in :location 0)
+                       :source '((:version 330)
+                                 (:defvar position :vec4 :storage in :location 0)
                                  (:defvar offset :vec4 :storage uniform)
                                  (:defvar view-matrix :mat4 :storage uniform)
                                  (:defvar projection-matrix :mat4 :storage uniform)
@@ -17,7 +18,8 @@
                                                                 (:+ position offset))))))
         (make-instance 'shader
                        :type :fragment-shader
-                       :source '((:defvar out-color :vec4 :storage out)
+                       :source '((:version 330)
+                                 (:defvar out-color :vec4 :storage out)
                                  (:defun main :void ()
                                          (:setf out-color (:vec4 0.5 0.5 1.0 1.0)))))))
 
