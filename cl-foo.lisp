@@ -43,6 +43,9 @@
             (make-array-buffer :element-array-buffer element-array-buffer :unsigned-short (elt cube-group 0)))
 
           ;; Things to update while looping.
-          (with-game-loop (window #'(lambda (scancode) (move-camera camera scancode)))
+          (with-game-loop (window keydown-scancodes)
+            (if keydown-scancodes (map nil
+                                       #'(lambda (scancode) (move-camera camera scancode))
+                                       keydown-scancodes))
             (with-vao (program array-buffer element-array-buffer 0 4 (length (elt cube-group 0)) :float)
               (uniform-matrix program 'view-matrix (camera-matrix camera)))))))))

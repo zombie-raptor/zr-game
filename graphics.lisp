@@ -21,26 +21,25 @@
          (gl:clear-color 0 0 0 1)
          ,@body))))
 
-(defmacro with-game-loop ((window keydown-actions) &body body)
-  `(let ((keydown-scancodes nil))
+(defmacro with-game-loop ((window keydown-scancodes) &body body)
+  `(let ((,keydown-scancodes nil))
      (sdl2:with-event-loop (:method :poll)
        (:keydown
         (:keysym keysym)
         (let ((scancode (sdl2:scancode-value keysym)))
-          (setf keydown-scancodes (adjoin scancode keydown-scancodes))))
+          (setf ,keydown-scancodes (adjoin scancode ,keydown-scancodes))))
 
        (:keyup
         (:keysym keysym)
         (let ((scancode (sdl2:scancode-value keysym)))
-          (if (member scancode keydown-scancodes)
-              (setf keydown-scancodes (set-difference keydown-scancodes (list scancode))))
+          (if (member scancode ,keydown-scancodes)
+              (setf ,keydown-scancodes (set-difference ,keydown-scancodes (list scancode))))
           (when (sdl2:scancode= scancode :scancode-escape)
             (sdl2:push-event :quit))))
 
        (:idle
         ()
         (gl:clear :color-buffer :depth-buffer)
-        (if keydown-scancodes (map nil ,keydown-actions keydown-scancodes))
         (progn ,@body)
         (gl:flush)
         (sdl2:gl-swap-window ,window))
