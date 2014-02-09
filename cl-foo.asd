@@ -7,7 +7,7 @@
   :license "MIT"
   :depends-on (:sdl2 :cl-ppcre :sb-cga)
   :components ((:file "package")
-               (:file "shader")
                (:file "graphics")
+               (:file "shader")
                (:file "game")
                (:file "cl-foo")))
