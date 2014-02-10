@@ -31,23 +31,25 @@
     (if fullscreen (sdl2:set-window-fullscreen window 1))
     (with-buffers (buffers :count 2)
       (with-shaders (shaders program *shaders*)
-        (let ((camera (make-instance 'camera))
-              (array-buffer (elt buffers 0))
-              (element-array-buffer (elt buffers 1))
-              (cube-group (get-cube-group 10 20 1 :offset #(0.0 -4.0 -10.0 0.0))))
+        (let* ((camera (make-instance 'camera))
+               (cube-group (get-cube-group 10 20 1 :offset #(0.0 -4.0 -10.0 0.0)))
+               (vao (make-instance 'vao
+                                   :program program
+                                   :array-buffer (elt buffers 0)
+                                   :element-array-buffer (elt buffers 1)
+                                   :array (elt cube-group 1)
+                                   :element-array (elt cube-group 0))))
 
           ;; Sets the parts of the program that don't need to be
           ;; updated constantly in the loop.
           (with-shader-program (program)
             (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 100.0))
-            (uniform-vector program 'offset #(1.0 -2.0 -10.0 0.0))
-            (make-array-buffer :array-buffer array-buffer :float (elt cube-group 1))
-            (make-array-buffer :element-array-buffer element-array-buffer :unsigned-short (elt cube-group 0)))
+            (uniform-vector program 'offset #(1.0 -2.0 -10.0 0.0)))
 
           ;; Things to update while looping.
           (with-game-loop (window keydown-scancodes)
             (if keydown-scancodes (map nil
                                        #'(lambda (scancode) (move-camera camera scancode))
                                        keydown-scancodes))
-            (with-vao (program array-buffer element-array-buffer 0 4 (length (elt cube-group 0)) :float)
-              (uniform-matrix program 'view-matrix (camera-matrix camera)))))))))
+            (use-vao vao 'position :vec4
+                     #'(lambda () (uniform-matrix program 'view-matrix (camera-matrix camera))))))))))
