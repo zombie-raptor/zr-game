@@ -106,12 +106,12 @@
     (gl:bind-buffer buffer-type 0)
     buffer))
 
-(defun draw-vao (array-buffer element-array-buffer index size count type)
+(defun draw-vao (array-buffer element-array-buffer index count type)
   (unwind-protect
        (progn (gl:bind-buffer :array-buffer array-buffer)
               (gl:bind-buffer :element-array-buffer element-array-buffer)
               (gl:enable-vertex-attrib-array index)
-              (gl:vertex-attrib-pointer index size type nil 0 0)
+              (gl:vertex-attrib-pointer index 4 type nil 0 0)
               (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count count))
     (progn (gl:disable-vertex-attrib-array index)
            (gl:bind-buffer :array-buffer 0)
@@ -128,7 +128,8 @@
    (element-array-buffer :initarg :element-array-buffer)
    (array :initarg :array)
    (element-array :initarg :element-array)
-   (program :initarg :program)))
+   (program :initarg :program)
+   (in-variable :initarg :in-variable)))
 
 (defmethod initialize-instance :after ((vao vao) &key)
   (with-shader-program ((slot-value vao 'program))
@@ -137,12 +138,11 @@
     (make-array-buffer :element-array-buffer (slot-value vao 'element-array-buffer)
                        :unsigned-short (slot-value vao 'element-array))))
 
-(defmethod use-vao ((vao vao) name type)
+(defmethod use-vao ((vao vao))
   (with-shader-program ((slot-value vao 'program))
     (draw-vao (slot-value vao 'array-buffer)
               (slot-value vao 'element-array-buffer)
-              (gl:get-attrib-location (slot-value vao 'program) (glsl-name name))
-              (ecase type ((:vec3) 3) ((:vec4) 4))
+              (gl:get-attrib-location (slot-value vao 'program) (glsl-name (slot-value vao 'in-variable)))
               (length (slot-value vao 'element-array)) :float)))
 
 ;;;; MATRICES

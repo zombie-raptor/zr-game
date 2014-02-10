@@ -32,18 +32,19 @@
     (with-buffers (buffers :count 2)
       (with-shaders (shaders program *shaders*)
         (let* ((camera (make-instance 'camera))
-               (cube-group (get-cube-group 10 20 1 :offset #(0.0 -4.0 -10.0 0.0)))
+               (cube-group (get-cube-group 10 10 10 :offset #(0.0 -4.0 -10.0 0.0)))
                (vao (make-instance 'vao
                                    :program program
                                    :array-buffer (elt buffers 0)
                                    :element-array-buffer (elt buffers 1)
                                    :array (elt cube-group 1)
-                                   :element-array (elt cube-group 0))))
+                                   :element-array (elt cube-group 0)
+                                   :in-variable 'position)))
 
           ;; Sets the parts of the program that don't need to be
           ;; updated constantly in the loop.
           (with-shader-program (program)
-            (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 100.0))
+            (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 200.0))
             (uniform-vector program 'offset #(1.0 -2.0 -10.0 0.0)))
 
           ;; Things to update while looping.
@@ -53,4 +54,4 @@
                                        keydown-scancodes))
             (with-shader-program (program)
               (uniform-matrix program 'view-matrix (camera-matrix camera)))
-            (use-vao vao 'position :vec4)))))))
+            (use-vao vao)))))))
