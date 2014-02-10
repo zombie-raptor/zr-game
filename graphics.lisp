@@ -106,19 +106,16 @@
     (gl:bind-buffer buffer-type 0)
     buffer))
 
-(defmacro with-vao ((program array-buffer element-array-buffer index size count type) &body body)
-  `(unwind-protect
-        (progn (gl:use-program ,program)
-               (gl:bind-buffer :array-buffer ,array-buffer)
-               (gl:bind-buffer :element-array-buffer ,element-array-buffer)
-               (gl:enable-vertex-attrib-array ,index)
-               (gl:vertex-attrib-pointer ,index ,size ,type nil 0 0)
-               ,@body
-               (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count ,count))
-     (progn (gl:disable-vertex-attrib-array ,index)
-            (gl:bind-buffer :array-buffer 0)
-            (gl:bind-buffer :element-array-buffer 0)
-            (gl:use-program 0))))
+(defun draw-vao (array-buffer element-array-buffer index size count type)
+  (unwind-protect
+       (progn (gl:bind-buffer :array-buffer array-buffer)
+              (gl:bind-buffer :element-array-buffer element-array-buffer)
+              (gl:enable-vertex-attrib-array index)
+              (gl:vertex-attrib-pointer index size type nil 0 0)
+              (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count count))
+    (progn (gl:disable-vertex-attrib-array index)
+           (gl:bind-buffer :array-buffer 0)
+           (gl:bind-buffer :element-array-buffer 0))))
 
 (defun uniform-matrix (program matrix-name matrix)
   (gl:uniform-matrix (gl:get-uniform-location program (glsl-name matrix-name)) 4 (vector matrix) nil))
@@ -140,14 +137,13 @@
     (make-array-buffer :element-array-buffer (slot-value vao 'element-array-buffer)
                        :unsigned-short (slot-value vao 'element-array))))
 
-(defmethod use-vao ((vao vao) name type actions)
-    (with-vao ((slot-value vao 'program)
-               (slot-value vao 'array-buffer)
-               (slot-value vao 'element-array-buffer)
-               (gl:get-attrib-location (slot-value vao 'program) (glsl-name name))
-               (ecase type ((:vec3) 3) ((:vec4) 4))
-               (length (slot-value vao 'element-array)) :float)
-      (funcall actions)))
+(defmethod use-vao ((vao vao) name type)
+  (with-shader-program ((slot-value vao 'program))
+    (draw-vao (slot-value vao 'array-buffer)
+              (slot-value vao 'element-array-buffer)
+              (gl:get-attrib-location (slot-value vao 'program) (glsl-name name))
+              (ecase type ((:vec3) 3) ((:vec4) 4))
+              (length (slot-value vao 'element-array)) :float)))
 
 ;;;; MATRICES
 ;;; These provide common matrices that really should be in a graphics

@@ -51,5 +51,6 @@
             (if keydown-scancodes (map nil
                                        #'(lambda (scancode) (move-camera camera scancode))
                                        keydown-scancodes))
-            (use-vao vao 'position :vec4
-                     #'(lambda () (uniform-matrix program 'view-matrix (camera-matrix camera))))))))))
+            (with-shader-program (program)
+              (uniform-matrix program 'view-matrix (camera-matrix camera)))
+            (use-vao vao 'position :vec4)))))))
