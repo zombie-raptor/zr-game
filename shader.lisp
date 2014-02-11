@@ -98,3 +98,8 @@
 
 (defmethod initialize-instance :after ((shader shader) &key)
   (setf (slot-value shader 'source) (make-glsl-shader (slot-value shader 'source))))
+
+(defun compile-all-shaders (shader-list)
+  (mapcar #'(lambda (shader)
+              (compile-gl-shader (shader-source shader) (shader-type shader)))
+          shader-list))

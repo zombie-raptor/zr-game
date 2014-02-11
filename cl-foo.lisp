@@ -23,22 +23,18 @@
                                  (:defun main :void ()
                                          (:setf out-color (:vec4 0.5 0.5 1.0 1.0)))))))
 
-;;; Note: SDL doesn't like it if the program is made fullscreen when
-;;; the resolution is not the monitor's current resolution, at least
-;;; on my machine.
 (defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test") (fullscreen nil))
-  (with-sdl2 (window :title title :width width :height height)
-    (if fullscreen (sdl2:set-window-fullscreen window 1))
+  (with-sdl2 (window :title title :width width :height height :fullscreen fullscreen)
     (with-buffers (buffers :count 2)
       (with-shaders (shaders program *shaders*)
         (let* ((camera (make-instance 'camera))
                (cube-group (get-cube-group 10 10 10 :offset #(0.0 -4.0 -10.0 0.0)))
                (vao (make-instance 'vao
                                    :program program
-                                   :array-buffer (elt buffers 0)
-                                   :element-array-buffer (elt buffers 1)
                                    :array (elt cube-group 1)
                                    :element-array (elt cube-group 0)
+                                   :array-buffer (elt buffers 0)
+                                   :element-array-buffer (elt buffers 1)
                                    :in-variable 'position)))
 
           ;; Sets the parts of the program that don't need to be

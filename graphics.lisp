@@ -11,12 +11,15 @@
 ;;; mainly so that actual programs do not need ridiculous levels of
 ;;; indentation.
 
-(defmacro with-sdl2 ((window &key (title "CL-FOO") (width 1280) (height 720)) &body body)
+;;; SDL doesn't like it if the program is made fullscreen when the
+;;; resolution is not the monitor's current resolution.
+(defmacro with-sdl2 ((window &key (title "CL-FOO") (width 1280) (height 720) (fullscreen nil)) &body body)
   `(sdl2:with-init (:everything)
      (sdl2:with-window (,window :title ,title :w ,width :h ,height :flags '(:shown :opengl))
        (sdl2:with-gl-context (gl-context ,window)
          (sdl2:gl-make-current ,window gl-context)
          (sdl2:hide-cursor)
+         (if ,fullscreen (sdl2:set-window-fullscreen ,window 1))
          (gl:enable :depth-test :cull-face)
          (gl:clear-color 0 0 0 1)
          ,@body))))
@@ -62,9 +65,7 @@
 
 ;;; FIXME: Assumes all of the given shaders are used in one program.
 (defmacro with-shaders ((shaders program shader-list) &body body)
-  `(let* ((,shaders (mapcar #'(lambda (shader)
-                                (compile-gl-shader (shader-source shader) (shader-type shader)))
-                            ,shader-list))
+  `(let* ((,shaders (compile-all-shaders ,shader-list))
           (,program (link-gl-program ,shaders)))
      (unwind-protect
           (progn ,@body)
