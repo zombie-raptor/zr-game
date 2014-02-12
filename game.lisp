@@ -33,13 +33,22 @@
 (defun camera-matrix (camera)
   (look-at-matrix (camera-eye camera) (camera-direction camera) (camera-up camera)))
 
+;;; Used to define different keyboard layouts for different keyboard
+;;; movement systems.
+(defmacro scancode-case ((scancode) &rest body)
+  (cons 'cond
+        (mapcar #'(lambda (l)
+                    `((sdl2:scancode= ,scancode ,(elt l 0)) ,(elt l 1)))
+                body)))
+
 (defun move-camera (camera scancode)
-  (cond ((sdl2:scancode= scancode :scancode-q) (move camera -0.1 :y))
-        ((sdl2:scancode= scancode :scancode-e) (move camera 0.1 :y))
-        ((sdl2:scancode= scancode :scancode-a) (move camera -0.1 :x))
-        ((sdl2:scancode= scancode :scancode-d) (move camera 0.1 :x))
-        ((sdl2:scancode= scancode :scancode-s) (move camera 0.1 :z))
-        ((sdl2:scancode= scancode :scancode-w) (move camera -0.1 :z))))
+  (scancode-case (scancode)
+                 (:scancode-q (move camera -0.1 :y))
+                 (:scancode-e (move camera 0.1 :y))
+                 (:scancode-a (move camera -0.1 :x))
+                 (:scancode-d (move camera 0.1 :x))
+                 (:scancode-s (move camera 0.1 :z))
+                 (:scancode-w (move camera -0.1 :z))))
 
 ;;;; CUBES
 
