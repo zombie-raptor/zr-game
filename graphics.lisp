@@ -17,11 +17,7 @@
   `(sdl2:with-init (:everything)
      (sdl2:with-window (,window :title ,title :w ,width :h ,height :flags '(:shown :opengl))
        (sdl2:with-gl-context (gl-context ,window)
-         (sdl2:gl-make-current ,window gl-context)
-         (sdl2:hide-cursor)
-         (if ,fullscreen (sdl2:set-window-fullscreen ,window 1))
-         (gl:enable :depth-test :cull-face)
-         (gl:clear-color 0 0 0 1)
+         (setup-sdl2-and-gl ,window gl-context ,fullscreen)
          ,@body))))
 
 (defmacro with-game-loop ((window keydown-scancodes) &body body)
@@ -29,16 +25,11 @@
      (sdl2:with-event-loop (:method :poll)
        (:keydown
         (:keysym keysym)
-        (let ((scancode (sdl2:scancode-value keysym)))
-          (setf ,keydown-scancodes (adjoin scancode ,keydown-scancodes))))
+        (setf ,keydown-scancodes (keydown-actions ,keydown-scancodes (sdl2:scancode-value keysym))))
 
        (:keyup
         (:keysym keysym)
-        (let ((scancode (sdl2:scancode-value keysym)))
-          (if (member scancode ,keydown-scancodes)
-              (setf ,keydown-scancodes (set-difference ,keydown-scancodes (list scancode))))
-          (when (sdl2:scancode= scancode :scancode-escape)
-            (sdl2:push-event :quit))))
+        (setf ,keydown-scancodes (keyup-actions ,keydown-scancodes (sdl2:scancode-value keysym))))
 
        (:idle
         ()
@@ -50,6 +41,23 @@
        (:quit
         ()
         t))))
+
+(defun setup-sdl2-and-gl (window gl-context fullscreen)
+  (sdl2:gl-make-current window gl-context)
+  (sdl2:hide-cursor)
+  (if fullscreen (sdl2:set-window-fullscreen window 1))
+  (gl:enable :depth-test :cull-face)
+  (gl:clear-color 0 0 0 1)
+  (gl:clear :color-buffer :depth-buffer))
+
+(defun keydown-actions (keydown-scancodes scancode)
+  (adjoin scancode keydown-scancodes))
+
+(defun keyup-actions (keydown-scancodes scancode)
+  (when (sdl2:scancode= scancode :scancode-escape) (sdl2:push-event :quit))
+  (if (member scancode keydown-scancodes)
+      (setf keydown-scancodes (set-difference keydown-scancodes (list scancode)))
+      keydown-scancodes))
 
 ;;;; OpenGL
 ;;; This section hides the C-like OpenGL code. It is still very easy
