@@ -2,7 +2,7 @@
 ;;; This file contains more general stuff that doesn't (currently)
 ;;; belong to another file.
 
-(in-package #:cl-foo)
+(in-package #:zr-game)
 
 ;;;; CAMERAS
 

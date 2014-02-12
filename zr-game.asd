@@ -1,8 +1,8 @@
-;;;; cl-foo.asd
+;;;; ZR-GAME.ASD
 
-(asdf:defsystem #:cl-foo
+(asdf:defsystem #:zr-game
   :serial t
-  :description "This is just a sandbox for me to test out SDL2 and OpenGL."
+  :description "This is a game engine written in Common Lisp."
   :author "Michael Babich"
   :license "MIT"
   :depends-on (:sdl2 :cl-ppcre :sb-cga)

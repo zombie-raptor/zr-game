@@ -1,1 +1,1 @@
-This is just a sandbox for me to test out SDL2 and OpenGL.
+This is a game engine written in Common Lisp.

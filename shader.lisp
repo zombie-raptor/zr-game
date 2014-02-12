@@ -3,7 +3,7 @@
 ;;; can then be compiled into OpenGL shaders. It is a work in
 ;;; progress.
 
-(in-package #:cl-foo)
+(in-package #:zr-game)
 
 (defun glsl-name (symbol)
   (let ((camelcase-string (cffi:translate-camelcase-name symbol)))

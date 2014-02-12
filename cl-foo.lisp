@@ -1,7 +1,7 @@
 ;;;; This file uses the functionality provided by this game engine
 ;;;; library to make a very simple demo of its capabilities.
 
-(in-package #:cl-foo)
+(in-package #:zr-game)
 
 ;;; Yes, I know this looks ugly. It's temporary.
 (defparameter *shaders*

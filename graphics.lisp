@@ -4,7 +4,7 @@
 ;;; graphics API so that the rest of the program can use code that
 ;;; looks more like Lisp code.
 
-(in-package #:cl-foo)
+(in-package #:zr-game)
 
 ;;;; SDL2
 ;;; This section abstracts over the SDL2 (and some OpenGL) verbosity,
