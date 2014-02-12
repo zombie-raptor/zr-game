@@ -10,4 +10,4 @@
                (:file "graphics")
                (:file "shader")
                (:file "game")
-               (:file "cl-foo")))
+               (:file "example")))
