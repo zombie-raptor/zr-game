@@ -3,6 +3,7 @@
 (defpackage #:zr-game
   (:use #:cl #:sdl2 #:cl-ppcre #:sb-cga)
   (:export #:main-loop
+           #:scancode-case
            ;; Cubes
            #:get-cube-points
            #:get-cube-group
@@ -16,7 +17,8 @@
            #:with-buffers
            #:with-shaders
            #:with-shader-program
-           #:with-vao
+           #:draw-vao
+           #:draw
            #:compile-gl-shader
            #:link-gl-program
            #:make-array-buffer

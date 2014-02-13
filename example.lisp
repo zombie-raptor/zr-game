@@ -34,13 +34,13 @@
       (with-shaders (shaders program *shaders*)
         (let* ((camera (make-instance 'camera))
                (cube-group (get-cube-group 10 10 10 :offset #(0.0 -4.0 -10.0 0.0)))
-               (vao (make-instance 'vao
-                                   :program program
-                                   :array (elt cube-group 1)
-                                   :element-array (elt cube-group 0)
-                                   :array-buffer (elt buffers 0)
-                                   :element-array-buffer (elt buffers 1)
-                                   :in-variable 'position)))
+               (cubes (make-instance 'vao
+                                     :program program
+                                     :array (elt cube-group 1)
+                                     :element-array (elt cube-group 0)
+                                     :array-buffer (elt buffers 0)
+                                     :element-array-buffer (elt buffers 1)
+                                     :in-variable 'position)))
 
           ;; These are the initial, constant uniforms for the shader
           ;; program.
@@ -48,17 +48,16 @@
             (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 200.0))
             (uniform-vector program 'offset #(1.0 -2.0 -10.0 0.0)))
 
-          ;; Things to update while looping. The keydown-scancodes
-          ;; detect which keys are currently down, so that actions can
-          ;; be made based on the keyboard input.
+          ;; Things to update while looping.
           (with-game-loop (window keydown-scancodes)
+            ;; The keydown-scancodes detect which keys are currently
+            ;; down, so that actions can be made based on the keyboard
+            ;; input.
             (if keydown-scancodes (map nil
                                        #'(lambda (scancode) (move-camera camera scancode))
                                        keydown-scancodes))
 
-            ;; This is for uniforms that are updated during the loop.
             (with-shader-program (program)
               (uniform-matrix program 'view-matrix (camera-matrix camera)))
 
-            ;; Calling this actually does the drawing.
-            (use-vao vao)))))))
+            (draw cubes)))))))

@@ -147,7 +147,9 @@
     (make-array-buffer :element-array-buffer (slot-value vao 'element-array-buffer)
                        :unsigned-short (slot-value vao 'element-array))))
 
-(defmethod use-vao ((vao vao))
+(defgeneric draw (object))
+
+(defmethod draw ((vao vao))
   (with-shader-program ((slot-value vao 'program))
     (draw-vao (slot-value vao 'array-buffer)
               (slot-value vao 'element-array-buffer)
