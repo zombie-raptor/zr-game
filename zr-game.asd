@@ -1,5 +1,3 @@
-;;;; ZR-GAME.ASD
-
 (asdf:defsystem #:zr-game
   :serial t
   :description "This is a game engine written in Common Lisp."

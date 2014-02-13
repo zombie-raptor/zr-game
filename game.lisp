@@ -1,10 +1,9 @@
-;;;; GAME.LISP
-;;; This file contains more general stuff that doesn't (currently)
-;;; belong to another file.
+;;;; This file contains more general stuff that doesn't (currently)
+;;;; belong to another file.
 
 (in-package #:zr-game)
 
-;;;; CAMERAS
+;;;; Cameras
 
 (defclass camera ()
   ((camera-eye
@@ -33,14 +32,6 @@
 (defun camera-matrix (camera)
   (look-at-matrix (camera-eye camera) (camera-direction camera) (camera-up camera)))
 
-;;; Used to define different keyboard layouts for different keyboard
-;;; movement systems.
-(defmacro scancode-case ((scancode) &rest body)
-  (cons 'cond
-        (mapcar #'(lambda (l)
-                    `((sdl2:scancode= ,scancode ,(elt l 0)) ,(elt l 1)))
-                body)))
-
 (defun move-camera (camera scancode)
   (scancode-case (scancode)
                  (:scancode-q (move camera -0.1 :y))
@@ -50,7 +41,7 @@
                  (:scancode-s (move camera 0.1 :z))
                  (:scancode-w (move camera -0.1 :z))))
 
-;;;; CUBES
+;;;; Cubes
 
 ;;; Generates 6 faces on a cube from the 8 points on a cube of a given
 ;;; size with the cube center at OFFSET.

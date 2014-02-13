@@ -1,15 +1,10 @@
-;;;; GRAPHICS.LISP
-;;; This file takes the relatively low-level APIs of cl-sdl2,
-;;; cl-opengl, and sb-cga and turns them into a more abstracted
-;;; graphics API so that the rest of the program can use code that
-;;; looks more like Lisp code.
+;;;; This file acts as a layer of abstraction between the graphics
+;;;; libraries (cl-opengl cl-sdl2 sb-cga) and the rest of the
+;;;; application.
 
 (in-package #:zr-game)
 
-;;;; SDL2
-;;; This section abstracts over the SDL2 (and some OpenGL) verbosity,
-;;; mainly so that actual programs do not need ridiculous levels of
-;;; indentation.
+;;;; SDL
 
 ;;; SDL doesn't like it if the program is made fullscreen when the
 ;;; resolution is not the monitor's current resolution.
@@ -59,11 +54,19 @@
       (setf keydown-scancodes (set-difference keydown-scancodes (list scancode)))
       keydown-scancodes))
 
+;;; Used to define different keyboard layouts for different keyboard
+;;; movement systems.
+(defmacro scancode-case ((scancode) &rest body)
+  (cons 'cond
+        (mapcar #'(lambda (l)
+                    `((sdl2:scancode= ,scancode ,(elt l 0)) ,(elt l 1)))
+                body)))
+
 ;;;; OpenGL
-;;; This section hides the C-like OpenGL code. It is still very easy
-;;; to break things if the order or scope is wrong, and everything
-;;; here apparently needs to be within sdl2:with-gl-context (or
-;;; with-sdl2) to work.
+
+;;;; It is very easy to break OpenGL things if the order or scope is
+;;;; wrong. Everything in this section needs to be within
+;;;; sdl2:with-gl-context or with-sdl2 to work.
 
 (defmacro with-buffers ((buffers &key (count 1)) &body body)
   `(let ((,buffers (gl:gen-buffers ,count)))
@@ -104,7 +107,6 @@
     (map nil #'(lambda (shader) (gl:detach-shader program shader)) shaders)
     program))
 
-;;; Puts a vector into a GL buffer as a GL array.
 (defun make-array-buffer (buffer-type buffer array-type vect)
   (let ((array (gl:alloc-gl-array array-type (length vect))))
     (dotimes (i (length vect))
@@ -156,9 +158,7 @@
               (gl:get-attrib-location (slot-value vao 'program) (glsl-name (slot-value vao 'in-variable)))
               (length (slot-value vao 'element-array)) :float)))
 
-;;;; MATRICES
-;;; These provide common matrices that really should be in a graphics
-;;; library already.
+;;;; Matrices
 
 ;;; Implementation of the gluPerspective matrix.
 ;;; https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml

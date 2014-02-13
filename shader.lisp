@@ -1,7 +1,6 @@
-;;;; SHADER.LISP
-;;; This file translates s-expressions to GLSL shader strings, which
-;;; can then be compiled into OpenGL shaders. It is a work in
-;;; progress.
+;;;; This file translates s-expressions to GLSL shader strings, which
+;;;; can then be compiled into OpenGL shaders. It is a work in
+;;;; progress.
 
 (in-package #:zr-game)
 

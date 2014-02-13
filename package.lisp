@@ -1,9 +1,6 @@
-;;;; package.lisp
-
 (defpackage #:zr-game
   (:use #:cl #:sdl2 #:cl-ppcre #:sb-cga)
   (:export #:main-loop
-           #:scancode-case
            ;; Cubes
            #:get-cube-points
            #:get-cube-group
@@ -14,6 +11,7 @@
            ;; Graphics
            #:with-sdl2
            #:with-game-loop
+           #:scancode-case
            #:with-buffers
            #:with-shaders
            #:with-shader-program
