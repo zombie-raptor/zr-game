@@ -16,13 +16,13 @@ have it installed on your machine before following the Lisp
 installation instructions. You should be able to install it from your
 package manager. You can also download it from:
 
-    http://www.libsdl.org/download-2.0.php
+  http://www.libsdl.org/download-2.0.php
 
 The easiest way to handle all of the Common Lisp dependencies is to
 have Quicklisp installed. To install it, you can follow the
 instructions here:
 
-    http://www.quicklisp.org/beta/
+  http://www.quicklisp.org/beta/
 
 One way to have Quicklisp recognize zr-game is to do the following:
 
