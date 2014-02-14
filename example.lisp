@@ -28,7 +28,7 @@
 ;;; Currently, configuration is done only through the arguments to
 ;;; this function. Eventually a menu and configuration files will be
 ;;; included.
-(defun main-loop (&key (width 1280) (height 720) (title "OpenGL Rendering Test") (fullscreen nil))
+(defun example (&key (width 1280) (height 720) (title "OpenGL Rendering Test") (fullscreen nil))
   (with-sdl2 (window :title title :width width :height height :fullscreen fullscreen)
     (with-buffers (buffers :count 2)
       (with-shaders (shaders program *shaders*)

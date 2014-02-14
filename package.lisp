@@ -1,6 +1,6 @@
 (defpackage #:zr-game
   (:use #:cl #:sdl2 #:cl-ppcre #:sb-cga)
-  (:export #:main-loop
+  (:export #:example
            ;; Cubes
            #:get-cube-points
            #:get-cube-group
