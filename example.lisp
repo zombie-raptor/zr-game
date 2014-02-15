@@ -23,7 +23,7 @@
                        :source '((:version 330)
                                  (:defvar out-color :vec4 :storage out)
                                  (:defun main :void ()
-                                         (:setf out-color (:vec4 0.5 0.5 1.0 1.0)))))))
+                                         (:setf out-color (:vec4 0.3 0.3 0.5 1.0)))))))
 
 ;;; Currently, configuration is done only through the arguments to
 ;;; this function. Eventually a menu and configuration files will be
@@ -33,7 +33,7 @@
     (with-buffers (buffers :count 2)
       (with-shaders (shaders program *shaders*)
         (let* ((camera (make-instance 'camera))
-               (cube-group (get-cube-group 10 10 10 :offset #(0.0 -4.0 -10.0 0.0)))
+               (cube-group (get-cube-group 2 2 100 :offset #(0.0 -4.0 -10.0 0.0)))
                (cubes (make-instance 'vao
                                      :program program
                                      :array (elt cube-group 1)
@@ -45,11 +45,10 @@
           ;; These are the initial, constant uniforms for the shader
           ;; program.
           (with-shader-program (program)
-            (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 200.0))
-            (uniform-vector program 'offset #(1.0 -2.0 -10.0 0.0)))
+            (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 200.0)))
 
           ;; Things to update while looping.
-          (with-game-loop (window keydown-scancodes)
+          (with-game-loop (window keydown-scancodes mouse-motion)
             ;; The keydown-scancodes detect which keys are currently
             ;; down, so that actions can be made based on the keyboard
             ;; input.
@@ -58,6 +57,7 @@
                                        keydown-scancodes))
 
             (with-shader-program (program)
-              (uniform-matrix program 'view-matrix (camera-matrix camera)))
+              (uniform-vector program 'offset (world-offset camera))
+              (uniform-matrix program 'view-matrix (get-matrix camera)))
 
             (draw cubes)))))))

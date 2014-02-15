@@ -5,35 +5,67 @@
 
 ;;;; Cameras
 
+;; The camera is fixed at the origin, looking in the direction of a
+;; unit circle on the x-z plane determined by its x-z-angle and
+;; looking up or down based on the y-angle. The world-offset changes
+;; as the camera moves.
 (defclass camera ()
   ((camera-eye
-    :initarg :camera-eye
     :accessor camera-eye
-    :initform (list 0.0 0.0 1.0))
+    :initform #(0.0 0.0 0.0))
    (camera-direction
-    :initarg :camera-direction
     :accessor camera-direction
-    :initform (list 0.0 0.0 0.0))
+    :initform #(0.0 0.0 -1.0))
    (camera-up
     :initarg :camera-up
     :accessor camera-up
-    :initform (list 0.0 1.0 0.0))))
+    :initform #(0.0 1.0 0.0))
+   (camera-x-z-angle
+    :initarg :camera-x-z-angle
+    :accessor camera-x-z-angle
+    :initform -90.0)
+   (camera-y-angle
+    :initarg :camera-y-angle
+    :accessor camera-y-angle
+    :initform 0.0)
+   (world-offset
+    :initarg :world-offset
+    :accessor world-offset
+    :initform #(0.0 0.0 0.0 1.0))))
 
 (defgeneric move (object magnitude direction))
+(defgeneric get-matrix (object))
+(defgeneric rotate-object (object x-z-angle y-angle))
 
-(defmethod move ((object camera) magnitude direction)
+(defmethod initialize-instance :after ((camera camera) &key)
+  (rotate-object camera 0 0))
+
+(defmethod get-matrix ((camera camera))
+  (look-at-matrix (camera-eye camera) (camera-direction camera) (camera-up camera)))
+
+;; FIXME: This was a nice simplification, but now motion is relative
+;; to the world rather than the camera, and so if you rotate the
+;; camera 180 degrees and press forward you will move backwards.
+(defmethod move ((camera camera) magnitude direction)
   (let ((i (case direction
              ((:x) 0)
              ((:y) 1)
              ((:z) 2))))
-    (incf (elt (camera-eye object) i) magnitude)
-    (incf (elt (camera-direction object) i) magnitude)))
+    (incf (elt (world-offset camera) i) (- magnitude))))
 
-(defun camera-matrix (camera)
-  (look-at-matrix (camera-eye camera) (camera-direction camera) (camera-up camera)))
+(defmethod rotate-object ((camera camera) x-z-angle y-angle)
+  (incf (camera-x-z-angle camera) x-z-angle)
+  (incf (camera-y-angle camera) y-angle)
+  (setf (elt (camera-direction camera) 0) (coerce (cos (* (camera-x-z-angle camera) pi (/ 180))) 'single-float))
+  (setf (elt (camera-direction camera) 1) (coerce (sin (* (camera-y-angle camera) pi (/ 180))) 'single-float))
+  (setf (elt (camera-direction camera) 2) (coerce (sin (* (camera-x-z-angle camera) pi (/ 180))) 'single-float)))
 
 (defun move-camera (camera scancode)
   (scancode-case (scancode)
+                 (:scancode-t (rotate-object camera 0 1))
+                 (:scancode-g (rotate-object camera 0 -1))
+                 (:scancode-f (rotate-object camera -1 0))
+                 (:scancode-h (rotate-object camera 1 0))
                  (:scancode-q (move camera -0.1 :y))
                  (:scancode-e (move camera 0.1 :y))
                  (:scancode-a (move camera -0.1 :x))
