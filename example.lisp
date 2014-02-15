@@ -45,6 +45,7 @@
           ;; These are the initial, constant uniforms for the shader
           ;; program.
           (with-shader-program (program)
+            (uniform-vector program 'offset #(0.0 0.0 0.0 1.0))
             (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 200.0)))
 
           ;; Things to update while looping.
@@ -57,7 +58,6 @@
                                        keydown-scancodes))
 
             (with-shader-program (program)
-              (uniform-vector program 'offset (world-offset camera))
               (uniform-matrix program 'view-matrix (get-matrix camera)))
 
             (draw cubes)))))))

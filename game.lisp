@@ -5,13 +5,10 @@
 
 ;;;; Cameras
 
-;; The camera is fixed at the origin, looking in the direction of a
-;; unit circle on the x-z plane determined by its x-z-angle and
-;; looking up or down based on the y-angle. The world-offset changes
-;; as the camera moves.
 (defclass camera ()
-  ((camera-eye
-    :accessor camera-eye
+  ((camera-location
+    :initarg camera-location
+    :accessor camera-location
     :initform #(0.0 0.0 0.0))
    (camera-direction
     :accessor camera-direction
@@ -27,11 +24,7 @@
    (camera-y-angle
     :initarg :camera-y-angle
     :accessor camera-y-angle
-    :initform 0.0)
-   (world-offset
-    :initarg :world-offset
-    :accessor world-offset
-    :initform #(0.0 0.0 0.0 1.0))))
+    :initform 0.0)))
 
 (defgeneric move (object magnitude direction))
 (defgeneric get-matrix (object))
@@ -41,24 +34,24 @@
   (rotate-object camera 0 0))
 
 (defmethod get-matrix ((camera camera))
-  (look-at-matrix (camera-eye camera) (camera-direction camera) (camera-up camera)))
+  (look-at-matrix (camera-location camera) (camera-direction camera) (camera-up camera)))
 
-;; FIXME: This was a nice simplification, but now motion is relative
-;; to the world rather than the camera, and so if you rotate the
-;; camera 180 degrees and press forward you will move backwards.
 (defmethod move ((camera camera) magnitude direction)
   (let ((i (case direction
              ((:x) 0)
              ((:y) 1)
              ((:z) 2))))
-    (incf (elt (world-offset camera) i) (- magnitude))))
+    (incf (elt (camera-location camera) i) magnitude)
+    (rotate-object camera 0 0)))
 
 (defmethod rotate-object ((camera camera) x-z-angle y-angle)
   (incf (camera-x-z-angle camera) x-z-angle)
   (incf (camera-y-angle camera) y-angle)
-  (setf (elt (camera-direction camera) 0) (coerce (cos (* (camera-x-z-angle camera) pi (/ 180))) 'single-float))
-  (setf (elt (camera-direction camera) 1) (coerce (sin (* (camera-y-angle camera) pi (/ 180))) 'single-float))
-  (setf (elt (camera-direction camera) 2) (coerce (sin (* (camera-x-z-angle camera) pi (/ 180))) 'single-float)))
+  (setf (camera-direction camera) (map 'vector #'+
+                                       (vector (coerce (cos (* (camera-x-z-angle camera) pi (/ 180))) 'single-float)
+                                               (coerce (sin (* (camera-y-angle camera) pi (/ 180))) 'single-float)
+                                               (coerce (sin (* (camera-x-z-angle camera) pi (/ 180))) 'single-float))
+                                       (camera-location camera))))
 
 (defun move-camera (camera scancode)
   (scancode-case (scancode)
