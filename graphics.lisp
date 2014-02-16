@@ -6,18 +6,25 @@
 
 ;;;; SDL
 
-;;; SDL doesn't like it if the program is made fullscreen when the
-;;; resolution is not the monitor's current resolution.
+;;;; FIXME: SDL2 under Linux doesn't like it if the program is made
+;;;; fullscreen when the resolution is not the monitor's current
+;;;; resolution. This is a bug in SDL2, which should be reported when
+;;;; more details are discovered.
+
 (defmacro with-sdl2 ((window &key (title "CL-FOO") (width 1280) (height 720) (fullscreen nil)) &body body)
   `(sdl2:with-init (:everything)
      (sdl2:with-window (,window :title ,title :w ,width :h ,height :flags '(:shown :opengl))
        (sdl2:with-gl-context (gl-context ,window)
-         (setup-sdl2-and-gl ,window gl-context ,fullscreen)
+         (sdl2:gl-make-current ,window gl-context)
+         (if ,fullscreen (sdl2:set-window-fullscreen ,window t))
          ,@body))))
 
 (defmacro with-game-loop ((window keydown-scancodes mouse-motion) &body body)
+  "This handles the events in a loop. You can call this macro to act
+on a list of the scancodes of the keys that are currently being
+pressed down and on the most recent mouse movements."
   `(let ((,keydown-scancodes nil)
-         (,mouse-motion (list 0 0)))
+         (,mouse-motion (list 0.0 0.0)))
      (sdl2:with-event-loop (:method :poll)
        (:keydown
         (:keysym keysym)
@@ -28,28 +35,21 @@
         (setf ,keydown-scancodes (keyup-actions ,keydown-scancodes (sdl2:scancode-value keysym))))
 
        (:mousemotion
-        (:xrel xrel :yrel yrel)
-        (setf (elt ,mouse-motion 0) xrel)
-        (setf (elt ,mouse-motion 1) yrel))
+        (:xrel x :yrel y)
+        (setf (elt ,mouse-motion 0) x)
+        (setf (elt ,mouse-motion 1) y))
 
        (:idle
         ()
         (gl:clear :color-buffer :depth-buffer)
         (progn ,@body)
+        (setf ,mouse-motion (list 0.0 0.0))
         (gl:flush)
         (sdl2:gl-swap-window ,window))
 
        (:quit
         ()
         t))))
-
-(defun setup-sdl2-and-gl (window gl-context fullscreen)
-  (sdl2:gl-make-current window gl-context)
-  (sdl2:hide-cursor)
-  (if fullscreen (sdl2:set-window-fullscreen window 1))
-  (gl:enable :depth-test :cull-face)
-  (gl:clear-color 0 0.1 0.01 1)
-  (gl:clear :color-buffer :depth-buffer))
 
 (defun keydown-actions (keydown-scancodes scancode)
   (adjoin scancode keydown-scancodes))
@@ -75,6 +75,11 @@
 ;;;; sdl2:with-gl-context or with-sdl2 to work.
 
 (defgeneric draw (object))
+
+(defun setup-gl ()
+  (gl:enable :depth-test :cull-face)
+  (gl:clear-color 0 0.1 0.01 1)
+  (gl:clear :color-buffer :depth-buffer))
 
 (defmacro with-buffers ((buffers &key (count 1)) &body body)
   `(let ((,buffers (gl:gen-buffers ,count)))

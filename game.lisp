@@ -59,10 +59,6 @@
 
 (defun move-camera (camera scancode)
   (scancode-case (scancode)
-                 (:scancode-t (rotate-object camera 0 1))
-                 (:scancode-g (rotate-object camera 0 -1))
-                 (:scancode-f (rotate-object camera -1 0))
-                 (:scancode-h (rotate-object camera 1 0))
                  (:scancode-q (move camera -0.1 :y))
                  (:scancode-e (move camera 0.1 :y))
                  (:scancode-a (move camera -0.1 :x))
