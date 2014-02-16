@@ -33,10 +33,9 @@
     (with-buffers (buffers :count 2)
       (with-shaders (shaders program *shaders*)
         (let* ((main-camera (make-instance 'camera
-                                           :location #(0.0 0.0 0.0)
-                                           :up #(0.0 1.0 0.0)
                                            :x-z-angle -90.0
-                                           :y-angle 0.0))
+                                           :y-angle 0.0
+                                           :world-offset #(0.0 0.0 0.0 1.0)))
                (cube-group (get-cube-group 2 2 100 :offset #(0.0 -4.0 -10.0 0.0)))
                (cubes (make-instance 'vao
                                      :program program
@@ -49,7 +48,6 @@
           ;; These are the initial, constant uniforms for the shader
           ;; program.
           (with-shader-program (program)
-            (uniform-vector program 'offset #(0.0 0.0 0.0 1.0))
             (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 200.0)))
 
           ;; Things to update while looping.
@@ -61,5 +59,6 @@
                                        #'(lambda (scancode) (move-camera main-camera scancode))
                                        keydown-scancodes))
             (with-shader-program (program)
+              (uniform-vector program 'offset (world-offset main-camera))
               (uniform-matrix program 'view-matrix (get-matrix main-camera)))
             (draw cubes)))))))
