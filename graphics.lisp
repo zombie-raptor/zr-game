@@ -74,6 +74,8 @@
 ;;;; wrong. Everything in this section needs to be within
 ;;;; sdl2:with-gl-context or with-sdl2 to work.
 
+(defgeneric draw (object))
+
 (defmacro with-buffers ((buffers &key (count 1)) &body body)
   `(let ((,buffers (gl:gen-buffers ,count)))
      (unwind-protect
@@ -154,8 +156,6 @@
                        :float (slot-value vao 'array))
     (make-array-buffer :element-array-buffer (slot-value vao 'element-array-buffer)
                        :unsigned-short (slot-value vao 'element-array))))
-
-(defgeneric draw (object))
 
 (defmethod draw ((vao vao))
   (with-shader-program ((slot-value vao 'program))

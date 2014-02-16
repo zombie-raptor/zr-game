@@ -5,33 +5,33 @@
 
 ;;;; Cameras
 
+(defgeneric get-matrix (object))
+(defgeneric move (object magnitude direction))
+(defgeneric rotate-object (object x-z-angle y-angle))
+
 (defclass camera ()
-  ((camera-location
-    :initarg camera-location
+  ((location
+    :initarg :location
     :accessor camera-location
     :initform #(0.0 0.0 0.0))
-   (camera-direction
+   (direction
     :accessor camera-direction
     :initform #(0.0 0.0 -1.0))
-   (camera-up
-    :initarg :camera-up
+   (up
+    :initarg :up
     :accessor camera-up
     :initform #(0.0 1.0 0.0))
-   (camera-x-z-angle
-    :initarg :camera-x-z-angle
+   (x-z-angle
+    :initarg :x-z-angle
     :accessor camera-x-z-angle
     :initform -90.0)
-   (camera-y-angle
-    :initarg :camera-y-angle
+   (y-angle
+    :initarg :y-angle
     :accessor camera-y-angle
     :initform 0.0)))
 
-(defgeneric move (object magnitude direction))
-(defgeneric get-matrix (object))
-(defgeneric rotate-object (object x-z-angle y-angle))
-
 (defmethod initialize-instance :after ((camera camera) &key)
-  (rotate-object camera 0 0))
+  (rotate-object camera 0.0 0.0))
 
 (defmethod get-matrix ((camera camera))
   (look-at-matrix (camera-location camera) (camera-direction camera) (camera-up camera)))
@@ -44,14 +44,16 @@
     (incf (elt (camera-location camera) i) magnitude)
     (rotate-object camera 0 0)))
 
+;; FIXME: Not rotating the camera's direction as intended.
 (defmethod rotate-object ((camera camera) x-z-angle y-angle)
   (incf (camera-x-z-angle camera) x-z-angle)
   (incf (camera-y-angle camera) y-angle)
-  (setf (camera-direction camera) (map 'vector #'+
-                                       (vector (coerce (cos (* (camera-x-z-angle camera) pi (/ 180))) 'single-float)
-                                               (coerce (sin (* (camera-y-angle camera) pi (/ 180))) 'single-float)
-                                               (coerce (sin (* (camera-x-z-angle camera) pi (/ 180))) 'single-float))
-                                       (camera-location camera))))
+  (setf (camera-direction camera) (map 'vector #'(lambda (x) (coerce x 'single-float))
+                                       (map 'vector #'+
+                                            (vector (cos (* (camera-x-z-angle camera) pi (/ 180)))
+                                                    (sin (* (camera-y-angle camera) pi (/ 180)))
+                                                    (sin (* (camera-x-z-angle camera) pi (/ 180))))
+                                            (camera-location camera)))))
 
 (defun move-camera (camera scancode)
   (scancode-case (scancode)
