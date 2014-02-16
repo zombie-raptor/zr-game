@@ -49,13 +49,10 @@
           (with-shader-program (program)
             (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 200.0)))
           (with-game-loop (win keydown-scancodes mouse-motion)
-            (if keydown-scancodes (map nil
-                                       #'(lambda (scancode) (move-camera main-camera scancode))
-                                       keydown-scancodes))
-            (rotate-object main-camera
-                           (* 5 mouse-sensitivity (elt mouse-motion 0) (/ width))
-                           (* -3 mouse-sensitivity (elt mouse-motion 1) (/ height)))
-            (sdl2:warp-mouse-in-window win (/ height 2) (/ width 2))
+            (keyboard-move-camera main-camera keydown-scancodes 0.1)
+            (mouse-move-camera main-camera (elt mouse-motion 0) (elt mouse-motion 1) width height
+                               :sensitivity mouse-sensitivity
+                               :capture-window win)
             (with-shader-program (program)
               (uniform-vector program 'offset (world-offset main-camera))
               (uniform-matrix program 'view-matrix (get-matrix main-camera)))
