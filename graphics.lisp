@@ -11,14 +11,6 @@
 ;;;; resolution. This is a bug in SDL2, which should be reported when
 ;;;; more details are discovered.
 
-(defmacro with-sdl2 ((window &key (title "CL-FOO") (width 1280) (height 720) (fullscreen nil)) &body body)
-  `(sdl2:with-init (:everything)
-     (sdl2:with-window (,window :title ,title :w ,width :h ,height :flags '(:shown :opengl))
-       (sdl2:with-gl-context (gl-context ,window)
-         (sdl2:gl-make-current ,window gl-context)
-         (if ,fullscreen (sdl2:set-window-fullscreen ,window t))
-         ,@body))))
-
 (defmacro with-game-loop ((window keydown-scancodes mouse-motion) &body body)
   "This handles the events in a loop. You can call this macro to act
 on a list of the scancodes of the keys that are currently being
@@ -71,8 +63,8 @@ pressed down and on the most recent mouse movements."
 ;;;; OpenGL
 
 ;;;; It is very easy to break OpenGL things if the order or scope is
-;;;; wrong. Everything in this section needs to be within
-;;;; sdl2:with-gl-context or with-sdl2 to work.
+;;;; wrong. If using SDL2, everything in this section needs to be
+;;;; within sdl2:with-gl-context or sdl2:with-everything to work.
 
 (defgeneric draw (object))
 

@@ -29,7 +29,7 @@
 ;;; this function. Eventually a menu and configuration files will be
 ;;; included.
 (defun example (&key (width 1280) (height 720) (mouse-sensitivity 10) (title "OpenGL Rendering Test") (fullscreen nil))
-  (with-sdl2 (window :title title :width width :height height :fullscreen fullscreen)
+  (sdl2:with-everything (:window (win :title title :w width :h height :fullscreen fullscreen) :gl gl)
     (with-buffers (buffers :count 2)
       (with-shaders (shaders program *shaders*)
         (sdl2:hide-cursor)
@@ -48,14 +48,14 @@
                                      :in-variable 'position)))
           (with-shader-program (program)
             (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 200.0)))
-          (with-game-loop (window keydown-scancodes mouse-motion)
+          (with-game-loop (win keydown-scancodes mouse-motion)
             (if keydown-scancodes (map nil
                                        #'(lambda (scancode) (move-camera main-camera scancode))
                                        keydown-scancodes))
             (rotate-object main-camera
                            (* 5 mouse-sensitivity (elt mouse-motion 0) (/ width))
                            (* -3 mouse-sensitivity (elt mouse-motion 1) (/ height)))
-            (sdl2:warp-mouse-in-window window (/ height 2) (/ width 2))
+            (sdl2:warp-mouse-in-window win (/ height 2) (/ width 2))
             (with-shader-program (program)
               (uniform-vector program 'offset (world-offset main-camera))
               (uniform-matrix program 'view-matrix (get-matrix main-camera)))
