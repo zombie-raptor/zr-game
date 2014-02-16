@@ -10,10 +10,7 @@
 (defgeneric rotate-object (object x-z-angle y-angle))
 
 (defclass camera ()
-  ((location
-    :accessor camera-location
-    :initform #(0.0 0.0 0.0))
-   (direction
+  ((direction
     :accessor camera-direction
     :initform #(0.0 0.0 -1.0))
    (up
@@ -36,8 +33,13 @@
   (rotate-object camera 0.0 0.0))
 
 (defmethod get-matrix ((camera camera))
-  (look-at-matrix (camera-location camera) (camera-direction camera) (camera-up camera)))
+  (camera-matrix (camera-direction camera) (camera-up camera)))
 
+;; FIXME: Movement on X/Z is currently constant based on the initial
+;; starting point, no matter which way the camera is facing, sort of
+;; like a tank turret. Movement should be relative to the angle on the
+;; x-z plane where you are looking, although Y should be
+;; independent. I think this would provide FPS-style movement.
 (defmethod move ((camera camera) magnitude direction)
   (let ((i (case direction
              ((:x) 0)
@@ -45,10 +47,11 @@
              ((:z) 2))))
     (incf (elt (world-offset camera) i) (- magnitude))))
 
-;; FIXME: Not rotating the camera's direction as intended.
 (defmethod rotate-object ((camera camera) x-z-angle y-angle)
   (incf (camera-x-z-angle camera) x-z-angle)
-  (incf (camera-y-angle camera) y-angle)
+  (when (and (<= (+ (camera-y-angle camera) y-angle) 90)
+             (>= (+ (camera-y-angle camera) y-angle) -90)
+             (incf (camera-y-angle camera) y-angle)))
   (setf (camera-direction camera) (map 'vector #'(lambda (x) (coerce x 'single-float))
                                        (vector (cos (* (camera-x-z-angle camera) pi (/ 180)))
                                                (sin (* (camera-y-angle camera) pi (/ 180)))

@@ -180,9 +180,9 @@
 (defun look-at-matrix (eye target up)
   (let* ((eye (sb-cga:vec (elt eye 0) (elt eye 1) (elt eye 2)))
          (target (sb-cga:vec (elt target 0) (elt target 1) (elt target 2)))
-         (up (sb-cga:normalize (sb-cga:vec (elt up 0) (elt up 1) (elt up 2))))
+         (up (sb-cga:vec (elt up 0) (elt up 1) (elt up 2)))
          (z (sb-cga:normalize (sb-cga:vec- target eye)))
-         (x (sb-cga:cross-product z up))
+         (x (sb-cga:cross-product z (sb-cga:normalize up)))
          (y (sb-cga:cross-product (sb-cga:normalize x) z))
          (m1 (sb-cga:matrix (elt x 0) (elt x 1) (elt x 2) 0.0
                             (elt y 0) (elt y 1) (elt y 2) 0.0
@@ -190,3 +190,14 @@
                             0.0 0.0 0.0 1.0))
          (m2 (sb-cga:translate (sb-cga:vec* eye -1.0))))
     (sb-cga:matrix* m2 m1)))
+
+(defun camera-matrix (target up)
+  (let* ((target (sb-cga:vec (elt target 0) (elt target 1) (elt target 2)))
+         (up (sb-cga:normalize (sb-cga:vec (elt up 0) (elt up 1) (elt up 2))))
+         (z (sb-cga:normalize target))
+         (x (sb-cga:cross-product z up))
+         (y (sb-cga:cross-product (sb-cga:normalize x) z)))
+    (sb-cga:matrix (elt x 0) (elt x 1) (elt x 2) 0.0
+                   (elt y 0) (elt y 1) (elt y 2) 0.0
+                   (- (elt z 0)) (- (elt z 1)) (- (elt z 2)) 0.0
+                   0.0 0.0 0.0 1.0)))

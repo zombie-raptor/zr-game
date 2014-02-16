@@ -24,6 +24,7 @@
            #:uniform-vector
            #:perspective-matrix
            #:look-at-matrix
+           #:camera-matrix
            ;; Shaders
            #:make-glsl-shader
            #:shader
