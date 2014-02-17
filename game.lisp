@@ -10,10 +10,7 @@
 (defgeneric rotate-object (object x-z-angle y-angle))
 
 (defclass camera ()
-  ((direction
-    :accessor camera-direction
-    :initform (copy-seq #(0.0 0.0 -1.0)))
-   (x-z-angle
+  ((x-z-angle
     :initarg :x-z-angle
     :accessor camera-x-z-angle
     :initform -90.0)
@@ -27,9 +24,7 @@
     :initform (make-array 3 :initial-element 0.0))))
 
 (defmethod get-matrix ((camera camera))
-  (setf (elt (camera-direction camera) 1) (coerce (sin (* (camera-y-angle camera) pi (/ 180))) 'single-float))
-  (sb-cga:matrix* (camera-matrix (camera-direction camera) #(0.0 1.0 0.0))
-                  ;; Equivalent to (rotate-around (sb-cga:vec 0.0 1.0 0.0) angle)
+  (sb-cga:matrix* (camera-matrix (vector 0.0 (coerce (sin (* (camera-y-angle camera) pi (/ 180))) 'single-float) -1.0) #(0.0 1.0 0.0))
                   (sb-cga:rotate* 0.0 (coerce (* (camera-x-z-angle camera) pi (/ 180)) 'single-float) 0.0)
                   (sb-cga:translate (sb-cga:vec (elt (world-offset camera) 0)
                                                 (elt (world-offset camera) 1)
