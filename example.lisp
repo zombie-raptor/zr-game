@@ -11,13 +11,12 @@
                        :type :vertex-shader
                        :source '((:version 330)
                                  (:defvar position :vec4 :storage in :location 0)
-                                 (:defvar offset :vec4 :storage uniform)
                                  (:defvar view-matrix :mat4 :storage uniform)
                                  (:defvar projection-matrix :mat4 :storage uniform)
                                  (:defun main :void ()
                                          (:setf gl-position (:* projection-matrix
                                                                 view-matrix
-                                                                (:+ position offset))))))
+                                                                position)))))
         (make-instance 'shader
                        :type :fragment-shader
                        :source '((:version 330)
@@ -34,10 +33,7 @@
       (with-shaders (shaders program *shaders*)
         (sdl2:hide-cursor)
         (setup-gl)
-        (let* ((main-camera (make-instance 'camera
-                                           :x-z-angle -90.0
-                                           :y-angle 0.0
-                                           :world-offset #(0.0 0.0 0.0 1.0)))
+        (let* ((main-camera (make-instance 'camera))
                (cube-group (get-cube-group 2 2 100 :offset #(0.0 -4.0 -10.0 0.0)))
                (cubes (make-instance 'vao
                                      :program program
@@ -54,6 +50,5 @@
                                :sensitivity mouse-sensitivity
                                :capture-window win)
             (with-shader-program (program)
-              (uniform-vector program 'offset (world-offset main-camera))
               (uniform-matrix program 'view-matrix (get-matrix main-camera)))
             (draw cubes)))))))

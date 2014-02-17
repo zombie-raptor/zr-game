@@ -12,10 +12,10 @@
 (defclass camera ()
   ((direction
     :accessor camera-direction
-    :initform #(0.0 0.0 -1.0))
+    :initform (make-array 3))
    (up
     :accessor camera-up
-    :initform #(0.0 1.0 0.0))
+    :initform (copy-seq #(0.0 1.0 0.0)))
    (x-z-angle
     :initarg :x-z-angle
     :accessor camera-x-z-angle
@@ -27,13 +27,13 @@
    (world-offset
     :initarg :world-offset
     :accessor world-offset
-    :initform #(0.0 0.0 0.0 1.0))))
+    :initform (make-array 3 :initial-element 0.0))))
 
 (defmethod initialize-instance :after ((camera camera) &key)
   (rotate-object camera 0.0 0.0))
 
 (defmethod get-matrix ((camera camera))
-  (camera-matrix (camera-direction camera) (camera-up camera)))
+  (camera-matrix (camera-direction camera) (camera-up camera) (world-offset camera)))
 
 (defmethod move ((camera camera) magnitude direction)
   (let ((i (case direction
