@@ -12,10 +12,7 @@
 (defclass camera ()
   ((direction
     :accessor camera-direction
-    :initform (make-array 3))
-   (up
-    :accessor camera-up
-    :initform (copy-seq #(0.0 1.0 0.0)))
+    :initform (copy-seq #(0.0 0.0 -1.0)))
    (x-z-angle
     :initarg :x-z-angle
     :accessor camera-x-z-angle
@@ -29,11 +26,14 @@
     :accessor world-offset
     :initform (make-array 3 :initial-element 0.0))))
 
-(defmethod initialize-instance :after ((camera camera) &key)
-  (rotate-object camera 0.0 0.0))
-
 (defmethod get-matrix ((camera camera))
-  (camera-matrix (camera-direction camera) (camera-up camera) (world-offset camera)))
+  (setf (elt (camera-direction camera) 1) (coerce (sin (* (camera-y-angle camera) pi (/ 180))) 'single-float))
+  (sb-cga:matrix* (camera-matrix (camera-direction camera) #(0.0 1.0 0.0))
+                  ;; Equivalent to (rotate-around (sb-cga:vec 0.0 1.0 0.0) angle)
+                  (sb-cga:rotate* 0.0 (coerce (* (camera-x-z-angle camera) pi (/ 180)) 'single-float) 0.0)
+                  (sb-cga:translate (sb-cga:vec (elt (world-offset camera) 0)
+                                                (elt (world-offset camera) 1)
+                                                (elt (world-offset camera) 2)))))
 
 (defmethod move ((camera camera) magnitude direction)
   (let ((i (case direction
@@ -46,58 +46,21 @@
   (incf (camera-x-z-angle camera) x-z-angle)
   (cond ((>= (+ (camera-y-angle camera) y-angle) 90) (setf (camera-y-angle camera) 90))
         ((<= (+ (camera-y-angle camera) y-angle) -90) (setf (camera-y-angle camera) -90))
-        (t (incf (camera-y-angle camera) y-angle)))
-  (setf (camera-direction camera) (map 'vector #'(lambda (x) (coerce x 'single-float))
-                                       (vector (cos (* (camera-x-z-angle camera) pi (/ 180)))
-                                               (sin (* (camera-y-angle camera) pi (/ 180)))
-                                               (sin (* (camera-x-z-angle camera) pi (/ 180)))))))
+        (t (incf (camera-y-angle camera) y-angle))))
 
-;;; FIXME: Now we have proper FPS-style first person movement with
-;;; strafing and forward/backwards movement relative to the direction
-;;; the mouse rotates the first person perspective. This should be
-;;; moved to a move method that is part of a subclass of camera so
-;;; that different camera controls can be used in different
-;;; situations. Some other types of movement: Flying a vehicle, third
-;;; person action, and various fixed-location strategy-style overview
-;;; views such as overhead and isometric.
+;;; FIXME: This assumes x and z are facing 0 degrees. It needs to
+;;; rotate with the x-z-angle. i.e. I broke it again. The work should
+;;; be done in the matrices.
 (defun keyboard-move-camera (camera scancodes speed)
   (map nil
        #'(lambda (scancode)
            (scancode-case (scancode)
-                          (:scancode-q (move camera -0.1 :y)) ; temporary: descend
-                          (:scancode-e (move camera 0.1 :y))  ; temporary: ascend
-                          (:scancode-a (progn (move camera
-                                                    (coerce (* speed (sin (* (camera-x-z-angle camera) pi (/ 180))))
-                                                            'single-float)
-                                                    :x)
-                                              (move camera
-                                                    (coerce (* speed (cos (* (camera-x-z-angle camera) pi (/ 180))))
-                                                            'single-float)
-                                                    :z)))
-                          (:scancode-d (progn (move camera
-                                                    (coerce (* (- speed) (sin (* (camera-x-z-angle camera) pi (/ 180))))
-                                                            'single-float)
-                                                    :x)
-                                              (move camera
-                                                    (coerce (* (- speed) (cos (* (camera-x-z-angle camera) pi (/ 180))))
-                                                            'single-float)
-                                                    :z)))
-                          (:scancode-s (progn (move camera
-                                                    (coerce (* (- speed) (cos (* (camera-x-z-angle camera) pi (/ 180))))
-                                                            'single-float)
-                                                    :x)
-                                              (move camera
-                                                    (coerce (* (- speed) (sin (* (camera-x-z-angle camera) pi (/ 180))))
-                                                            'single-float)
-                                                    :z)))
-                          (:scancode-w (progn (move camera
-                                                    (coerce (* speed (cos (* (camera-x-z-angle camera) pi (/ 180))))
-                                                            'single-float)
-                                                    :x)
-                                              (move camera
-                                                    (coerce (* speed (sin (* (camera-x-z-angle camera) pi (/ 180))))
-                                                            'single-float)
-                                                    :z)))))
+                          (:scancode-q (move camera (- speed) :y))
+                          (:scancode-e (move camera speed :y))
+                          (:scancode-s (move camera (- speed) :x))
+                          (:scancode-w (move camera speed :x))
+                          (:scancode-a (move camera (- speed) :z))
+                          (:scancode-d (move camera speed :z))))
        scancodes))
 
 (defun mouse-move-camera (camera x y w h &key (capture-window nil) (sensitivity 10))

@@ -191,16 +191,13 @@ pressed down and on the most recent mouse movements."
                                    (- (elt z 0)) (- (elt z 1)) (- (elt z 2)) 0.0
                                    0.0 0.0 0.0 1.0))))
 
-;;; FIXME: This is starting to look suspiciously like look-at-matrix
-;;; now. Find a way to merge them?
-(defun camera-matrix (target up offset)
+(defun camera-matrix (target up)
   (let* ((target (sb-cga:vec (elt target 0) (elt target 1) (elt target 2)))
          (up (sb-cga:normalize (sb-cga:vec (elt up 0) (elt up 1) (elt up 2))))
          (z (sb-cga:normalize target))
          (x (sb-cga:cross-product z up))
          (y (sb-cga:cross-product (sb-cga:normalize x) z)))
-    (sb-cga:matrix* (sb-cga:matrix (elt x 0) (elt x 1) (elt x 2) 0.0
-                                   (elt y 0) (elt y 1) (elt y 2) 0.0
-                                   (- (elt z 0)) (- (elt z 1)) (- (elt z 2)) 0.0
-                                   0.0 0.0 0.0 1.0)
-                    (sb-cga:translate (sb-cga:vec (elt offset 0) (elt offset 1) (elt offset 2))))))
+    (sb-cga:matrix (elt x 0) (elt x 1) (elt x 2) 0.0
+                   (elt y 0) (elt y 1) (elt y 2) 0.0
+                   (- (elt z 0)) (- (elt z 1)) (- (elt z 2)) 0.0
+                   0.0 0.0 0.0 1.0)))
