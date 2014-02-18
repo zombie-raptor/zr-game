@@ -45,8 +45,8 @@
           (with-shader-program (program)
             (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 200.0)))
           (with-game-loop (win keydown-scancodes mouse-motion)
-            (keyboard-move-camera main-camera keydown-scancodes 0.1)
-            (mouse-move-camera main-camera (elt mouse-motion 0) (elt mouse-motion 1) width height
+            (keyboard-move main-camera keydown-scancodes 0.1)
+            (mouse-move main-camera (elt mouse-motion 0) (elt mouse-motion 1) width height
                                :sensitivity mouse-sensitivity
                                :capture-window win)
             (with-shader-program (program)
