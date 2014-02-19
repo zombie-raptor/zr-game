@@ -8,7 +8,7 @@
 (defgeneric get-matrix (object))
 (defgeneric move (object magnitude direction))
 (defgeneric rotate-object (object x-z-angle y-angle))
-(defgeneric keyboard-move (object scancodes speed))
+(defgeneric keyboard-move (object scancodes &key speed))
 (defgeneric mouse-move (object x y w h &key capture-window sensitivity))
 
 (defclass camera ()
@@ -48,7 +48,7 @@
 ;;; FIXME: This assumes x and z are facing 0 degrees. It needs to
 ;;; rotate with the x-z-angle. i.e. I broke it again. The work should
 ;;; be done in the matrices.
-(defmethod keyboard-move ((camera camera) scancodes speed)
+(defmethod keyboard-move ((camera camera) scancodes &key (speed 0.1))
   (map nil
        #'(lambda (scancode)
            (scancode-case (scancode)
