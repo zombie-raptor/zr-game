@@ -16,9 +16,9 @@
     :initarg :x-z-angle
     :accessor camera-x-z-angle
     :initform -90.0)
-   (y-angle
-    :initarg :y-angle
-    :accessor camera-y-angle
+   (y-z-angle
+    :initarg :y-z-angle
+    :accessor camera-y-z-angle
     :initform 0.0)
    (world-offset
     :initarg :world-offset
@@ -26,7 +26,7 @@
     :initform (make-array 3 :initial-element 0.0))))
 
 (defmethod get-matrix ((camera camera))
-  (sb-cga:matrix* (camera-matrix (vector 0.0 (coerce (sin (* (camera-y-angle camera) pi (/ 180))) 'single-float) -1.0) #(0.0 1.0 0.0))
+  (sb-cga:matrix* (sb-cga:rotate* (coerce (* (camera-y-z-angle camera) pi (/ 180)) 'single-float) 0.0 0.0)
                   (sb-cga:rotate* 0.0 (coerce (* (camera-x-z-angle camera) pi (/ 180)) 'single-float) 0.0)
                   (sb-cga:translate (sb-cga:vec (elt (world-offset camera) 0)
                                                 (elt (world-offset camera) 1)
@@ -39,11 +39,11 @@
              ((:z) 2))))
     (incf (elt (world-offset camera) i) (- magnitude))))
 
-(defmethod rotate-object ((camera camera) x-z-angle y-angle)
+(defmethod rotate-object ((camera camera) x-z-angle y-z-angle)
   (incf (camera-x-z-angle camera) x-z-angle)
-  (cond ((>= (+ (camera-y-angle camera) y-angle) 90) (setf (camera-y-angle camera) 90))
-        ((<= (+ (camera-y-angle camera) y-angle) -90) (setf (camera-y-angle camera) -90))
-        (t (incf (camera-y-angle camera) y-angle))))
+  (cond ((>= (+ (camera-y-z-angle camera) y-z-angle) 90) (setf (camera-y-z-angle camera) 90))
+        ((<= (+ (camera-y-z-angle camera) y-z-angle) -90) (setf (camera-y-z-angle camera) -90))
+        (t (incf (camera-y-z-angle camera) y-z-angle))))
 
 ;;; FIXME: This assumes x and z are facing 0 degrees. It needs to
 ;;; rotate with the x-z-angle. i.e. I broke it again. The work should
@@ -61,7 +61,7 @@
        scancodes))
 
 (defmethod mouse-move ((camera camera) x y w h &key (capture-window nil) (sensitivity 10))
-  (rotate-object camera (* 5 sensitivity x (/ w)) (* -3 sensitivity y (/ h)))
+  (rotate-object camera (* 5 sensitivity x (/ w)) (* 3 sensitivity y (/ h)))
   (if capture-window (sdl2:warp-mouse-in-window capture-window (/ h 2) (/ w 2))))
 
 ;;;; Cubes
