@@ -70,11 +70,11 @@ pressed down and on the most recent mouse movements."
 
 ;;; FIXME: Obviously, different programs will need to use different
 ;;; things here.
-(defun setup-gl ()
+(defun setup-gl (&key (rgb-background #(0.0 0.0 0.0)))
   (gl:enable :depth-test :cull-face)
   (gl:hint :line-smooth-hint :nicest)
   (gl:hint :polygon-smooth-hint :nicest)
-  (gl:clear-color 0 0.1 0.01 1)
+  (gl:clear-color (elt rgb-background 0) (elt rgb-background 1) (elt rgb-background 2) 1)
   (gl:clear :color-buffer :depth-buffer))
 
 (defmacro with-buffers ((buffers &key (count 1)) &body body)

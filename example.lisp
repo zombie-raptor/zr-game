@@ -32,7 +32,7 @@
     (with-buffers (buffers :count 2)
       (with-shaders (shaders program *shaders*)
         (sdl2:hide-cursor)
-        (setup-gl)
+        (setup-gl :rgb-background #(0.0 0.1 0.01))
         (let* ((main-camera (make-instance 'camera))
                (cube-group (get-cube-group 2 2 100 :offset #(0.0 -4.0 -10.0 0.0)))
                (cubes (make-instance 'vao
