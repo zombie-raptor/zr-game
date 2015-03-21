@@ -24,6 +24,18 @@
                                  (:defun main :void ()
                                          (:setf out-color (:vec4 0.3 0.3 0.5 1.0)))))))
 
+;;; Currently, this makes a bunch of cubes to render on the screen. It
+;;; will later be generalized to more types of shapes.
+(defun make-some-shapes (program buffers)
+  (let ((shape-group (get-cube-group 2 2 100 :offset #(0.0 -4.0 -10.0 0.0))))
+    (make-instance 'vao
+                   :program program
+                   :array (elt shape-group 1)
+                   :element-array (elt shape-group 0)
+                   :array-buffer (elt buffers 0)
+                   :element-array-buffer (elt buffers 1)
+                   :in-variable 'position)))
+
 ;;; Currently, configuration is done only through the arguments to
 ;;; this function. Eventually a menu and configuration files will be
 ;;; included.
@@ -33,15 +45,8 @@
       (with-shaders (shaders program *shaders*)
         (sdl2:hide-cursor)
         (setup-gl :rgb-background #(0.0 0.1 0.01))
-        (let* ((main-camera (make-instance 'camera))
-               (cube-group (get-cube-group 2 2 100 :offset #(0.0 -4.0 -10.0 0.0)))
-               (cubes (make-instance 'vao
-                                     :program program
-                                     :array (elt cube-group 1)
-                                     :element-array (elt cube-group 0)
-                                     :array-buffer (elt buffers 0)
-                                     :element-array-buffer (elt buffers 1)
-                                     :in-variable 'position)))
+        (let ((main-camera (make-instance 'camera))
+              (shapes (make-some-shapes program buffers)))
           (with-shader-program (program)
             (uniform-matrix program 'projection-matrix (perspective-matrix 45.0 (/ width height) 0.1 200.0)))
           (with-game-loop (win keydown-scancodes mouse-motion)
@@ -51,4 +56,4 @@
                                :capture-window win)
             (with-shader-program (program)
               (uniform-matrix program 'view-matrix (get-matrix main-camera)))
-            (draw cubes)))))))
+            (draw shapes)))))))
