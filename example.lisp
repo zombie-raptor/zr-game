@@ -45,34 +45,16 @@
                  point8 point1 point4 point6    ; left
                  point2 point7 point5 point3))) ; right
 
-;;; FIXME: This is way too slow to use to actually generate a group of
-;;; cubes. Something faster is needed.
-(defun get-cube-group (width height depth &key (offset #(0.0 0.0 0.0 0.0)))
-  (let ((u nil)
-        (v nil)
-        (i 0)
-        (triangle-points (reduce #'(lambda (x y) (concatenate 'vector x y))
+;;; Currently, this makes a cube to render on the screen.
+(defun make-some-shapes (program buffers)
+  (let ((triangle-points (reduce #'(lambda (x y) (concatenate 'vector x y))
                                  (map 'vector #'(lambda (x y) (map 'vector #'+ x y))
                                       (map 'vector #'(lambda (x) (make-array 6 :initial-element (* 4 x))) #(0 1 2 3 4 5))
                                       (make-array 6 :initial-element #(0 1 2 2 3 0))))))
-    (dotimes (x width)
-      (dotimes (y height)
-        (dotimes (z depth)
-          (setf v (concatenate 'vector v (get-cube-points :offset (map 'vector #'+ offset (vector x y z 1.0)))))
-          (setf u (concatenate 'vector u (map 'vector #'+
-                                              (make-array (* 6 6) :initial-element (* i 6 4))
-                                              triangle-points)))
-          (incf i))))
-    (vector u v)))
-
-;;; Currently, this makes a bunch of cubes to render on the screen. It
-;;; will later be generalized to more types of shapes.
-(defun make-some-shapes (program buffers)
-  (let ((shape-group (get-cube-group 2 2 100 :offset #(0.0 -4.0 -10.0 0.0))))
     (make-instance 'vao
                    :program program
-                   :array (elt shape-group 1)
-                   :element-array (elt shape-group 0)
+                   :array (get-cube-points :offset #(0.0 -4.0 -10.0 0.0))
+                   :element-array triangle-points
                    :array-buffer (elt buffers 0)
                    :element-array-buffer (elt buffers 1)
                    :in-variable 'position)))

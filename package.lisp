@@ -3,7 +3,6 @@
   (:export #:example
            ;; Cubes
            #:get-cube-points
-           #:get-cube-group
            ;; Cameras
            #:camera
            #:camera-matrix
