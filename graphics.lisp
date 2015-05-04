@@ -6,11 +6,6 @@
 
 ;;;; SDL
 
-;;;; FIXME: SDL2 under Linux doesn't like it if the program is made
-;;;; fullscreen when the resolution is not the monitor's current
-;;;; resolution. This is a bug in SDL2, which should be reported when
-;;;; more details are discovered.
-
 (defmacro with-game-loop ((window keydown-scancodes mouse-motion) &body body)
   "This handles the events in a loop. You can call this macro to act
 on a list of the scancodes of the keys that are currently being
@@ -62,14 +57,8 @@ pressed down and on the most recent mouse movements."
 
 ;;;; OpenGL
 
-;;;; It is very easy to break OpenGL things if the order or scope is
-;;;; wrong. If using SDL2, everything in this section needs to be
-;;;; within sdl2:with-gl-context or sdl2:with-everything to work.
-
 (defgeneric draw (object))
 
-;;; FIXME: Obviously, different programs will need to use different
-;;; things here.
 (defun setup-gl (&key (rgb-background #(0.0 0.0 0.0)))
   (gl:enable :depth-test :cull-face)
   (gl:hint :line-smooth-hint :nicest)
