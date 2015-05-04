@@ -1,9 +1,10 @@
-;;;; This file contains more general stuff that doesn't (currently)
-;;;; belong to another file.
+;;;; This file contains the camera-specific code.
 
 (in-package #:zr-game)
 
-;;;; Cameras
+;;;; Observer Camera
+
+;;; The observer camera is not affected by physics.
 
 (defgeneric get-matrix (object))
 (defgeneric move (object magnitude direction))

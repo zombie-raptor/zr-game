@@ -7,5 +7,5 @@
   :components ((:file "package")
                (:file "graphics")
                (:file "shader")
-               (:file "game")
+               (:file "camera")
                (:file "example")))
