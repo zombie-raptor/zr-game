@@ -22,7 +22,7 @@
                        :source '((:version 330)
                                  (:defvar out-color :vec4 :storage out)
                                  (:defun main :void ()
-                                         (:setf out-color (:vec4 0.3 0.3 0.5 1.0)))))))
+                                         (:setf out-color (:vec4 0.3 0.0 0.0 1.0)))))))
 
 ;;;; Cubes
 
@@ -53,7 +53,7 @@
                                       (make-array 6 :initial-element #(0 1 2 2 3 0))))))
     (make-instance 'vao
                    :program program
-                   :array (get-cube-points :offset #(0.0 -4.0 -10.0 0.0))
+                   :array (get-cube-points :offset #(-2.0 -2.0 0.0 0.0))
                    :element-array triangle-points
                    :array-buffer (elt buffers 0)
                    :element-array-buffer (elt buffers 1)
@@ -67,7 +67,7 @@
     (with-buffers (buffers :count 2)
       (with-shaders (shaders program *shaders*)
         (sdl2:hide-cursor)
-        (setup-gl :rgb-background #(0.0 0.1 0.01))
+        (setup-gl :rgb-background #(0.0 0.0 0.1))
         (let ((main-camera (make-instance 'camera))
               (shapes (make-some-shapes program buffers)))
           (with-shader-program (program)
