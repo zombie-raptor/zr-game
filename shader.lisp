@@ -1,6 +1,4 @@
-;;;; This file translates s-expressions to GLSL shader strings, which
-;;;; can then be compiled into OpenGL shaders. It is a work in
-;;;; progress.
+;;;; Compiles code to GLSL shader strings.
 
 (in-package #:zr-game)
 
@@ -27,17 +25,17 @@
 (defun unary-op (symbol-string first-elt)
   (format nil "~A(~A)" symbol-string first-elt))
 
-(defun glsl-function-argument (arg)
-  (format nil "~A ~A" (glsl-name (elt arg 1)) (glsl-name (elt arg 0))))
-
-;;; Takes in a name, a type, a list of arguments, and a body and
-;;; returns a string representation of a GLSL function. The argument
-;;; list can be blank or can be arbitrarily long.
+;;; Takes in a name, a list of arguments (the first is the return
+;;; type), and a body and returns a string representation of a GLSL
+;;; function.
 ;;;
 ;;; It takes in typed arguments like defmethod, with each argument
 ;;; being a list of two symbols, the first as the name and the second
 ;;; as the type.
 (defun glsl-function (name type args body)
+  (defun glsl-function-argument (arg)
+    (format nil "~A ~A" (glsl-name (elt arg 1)) (glsl-name (elt arg 0))))
+
   (let ((first-arg (first args))
         (rest-args (rest args)))
     (format nil
@@ -66,18 +64,18 @@
   (let ((first-elt (first l))
         (rest-elt (rest l)))
     (case symbol
-      ((:defun) (glsl-function (elt l 0) (elt l 1) (elt l 2) (nthcdr 3 l)))
-      ((:defvar) (glsl-var first-elt (first rest-elt)
+      ((defun) (glsl-function (elt l 0) (car (elt l 1)) (cdr (elt l 1)) (nthcdr 2 l)))
+      ((defvar) (glsl-var first-elt (first rest-elt)
                            :storage (getf (rest rest-elt) :storage)
                            :location (getf (rest rest-elt) :location)))
-      ((:version) (format nil "#version ~D~%~%" first-elt))
       (otherwise (let ((first-elt (glsl-element first-elt))
                        (rest-elt (mapcar #'glsl-element rest-elt)))
                    (case symbol
-                     ((:setf) (format nil "~A = ~A;~%" first-elt (first rest-elt)))
-                     ((:+ :* :/ :> :< :>= :<= :and :or) (binary-op symbol first-elt rest-elt))
-                     ((:not) (unary-op "!" first-elt))
-                     ((:-) (if (= (length rest-elt) 0)
+                     ((glsl-version) (format nil "#version ~D~%~%" first-elt))
+                     ((setf) (format nil "~A = ~A;~%" first-elt (first rest-elt)))
+                     ((+ * / > < >= <= and or) (binary-op symbol first-elt rest-elt))
+                     ((not) (unary-op "!" first-elt))
+                     ((-) (if (= (length rest-elt) 0)
                                (unary-op symbol first-elt)
                                (binary-op symbol first-elt rest-elt)))
                      (otherwise (format nil "~A(~@[~A~]~{, ~A~})" (glsl-name symbol) first-elt rest-elt))))))))
@@ -93,9 +91,12 @@
    (shader-type
     :initarg :type
     :accessor shader-type
-    :initform (error "You need to provide the type for the shader."))))
+    :initform (error "You need to provide the type for the shader."))
+   (source-sexp
+    :accessor shader-source-sexp)))
 
 (defmethod initialize-instance :after ((shader shader) &key)
+  (setf (slot-value shader 'source-sexp) (slot-value shader 'source))
   (setf (slot-value shader 'source) (make-glsl-shader (slot-value shader 'source))))
 
 (defun compile-all-shaders (shader-list)

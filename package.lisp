@@ -28,4 +28,5 @@
            #:make-glsl-shader
            #:shader
            #:shader-source
+           #:shader-source-sexp
            #:shader-type))

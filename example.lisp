@@ -3,26 +3,23 @@
 
 (in-package #:zr-game)
 
-;;; Yes, I know this looks ugly. It's temporary. This is just an
-;;; intermediate form that will be generated to make the source code
-;;; look more natural.
 (defparameter *shaders*
   (list (make-instance 'shader
                        :type :vertex-shader
-                       :source '((:version 330)
-                                 (:defvar position :vec4 :storage in :location 0)
-                                 (:defvar view-matrix :mat4 :storage uniform)
-                                 (:defvar projection-matrix :mat4 :storage uniform)
-                                 (:defun main :void ()
-                                         (:setf gl-position (:* projection-matrix
-                                                                view-matrix
-                                                                position)))))
+                       :source `((glsl-version 330)
+                                 (defvar position :vec4 :storage in :location 0)
+                                 (defvar view-matrix :mat4 :storage uniform)
+                                 (defvar projection-matrix :mat4 :storage uniform)
+                                 (defun main (:void)
+                                   (setf gl-position (* projection-matrix
+                                                        view-matrix
+                                                        position)))))
         (make-instance 'shader
                        :type :fragment-shader
-                       :source '((:version 330)
-                                 (:defvar out-color :vec4 :storage out)
-                                 (:defun main :void ()
-                                         (:setf out-color (:vec4 0.3 0.0 0.0 1.0)))))))
+                       :source `((glsl-version 330)
+                                 (defvar out-color :vec4 :storage out)
+                                 (defun main (:void)
+                                   (setf out-color (vec4 0.3 0.0 0.0 1.0)))))))
 
 ;;;; Cubes
 
@@ -53,7 +50,7 @@
                                       (make-array 6 :initial-element #(0 1 2 2 3 0))))))
     (make-instance 'vao
                    :program program
-                   :array (get-cube-points :offset #(-2.0 -2.0 0.0 0.0))
+                   :array (get-cube-points :offset #(-2.0 0.0 0.0 0.0))
                    :element-array triangle-points
                    :array-buffer (elt buffers 0)
                    :element-array-buffer (elt buffers 1)
